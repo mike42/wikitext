@@ -765,22 +765,32 @@ class DefaultParserBackend {
 	}
 	
 	/**
-	 * Default rendering of [http://... link] or [http://foo]
+	 * Default rendering of [[link]] or [[link|foo]]
 	 * 
 	 * @param string $destination page name we are linking to
 	 * @param string $caption Caption of this link (can inlude parsed wikitext)
 	 * @return string HTML markup for the link
 	 */
 	public function render_a_internal($arg) {
+		/* Figure out properties based on arguments */
 		$caption = $destination = $arg[0];
 		if(isset($arg[1])) {
 			$caption = $arg[1];
 		}
-		return "<a href=\"".htmlspecialchars($destination)."\">".$caption."</a>";
+		/* Allow the local app to override link properties */
+		$info = $this -> getInternalLinkInfo(array('exists' => true, 'title' => $destination, 'dest' => $destination, 'caption' => $caption));
+		return "<a href=\"".htmlspecialchars($info['dest'])."\" title=\"".htmlspecialchars($info['title'])."\">".$info['caption']."</a>";
 	}
 	
 	/**
-	 * Default rendering of [[link]] or [[link|foo]]
+	 * Method to override when providing extra info
+	 */
+	public function getInternalLinkInfo($info) {
+		return $info;
+	}
+	
+	/**
+	 * Default rendering of [http://... link] or [http://foo]
 	 *
 	 * @param string $destination page name we are linking to
 	 * @param string $caption Caption of this link (can inlude parsed wikitext)
@@ -861,6 +871,15 @@ class DefaultParserBackend {
 	
 	public function render_template($arg) {
 		return "(Template '" . $arg[0]."')";
+	}
+	
+	/**
+	 * Function to over-ride if you want to provide a mechanism for getting templates
+	 * 
+	 * @param string $template
+	 */
+	public function getTemplateMarkup($template) {
+
 	}
 }
 ?>
