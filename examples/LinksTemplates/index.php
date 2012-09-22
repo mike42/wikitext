@@ -12,7 +12,6 @@ class CustomParserBackend extends DefaultParserBackend {
 		return $info;
 	}
 	
-
 }
 
 /* Figure out what page to load */
