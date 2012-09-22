@@ -21,30 +21,23 @@
   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 class WikitextParser {
-	public static $version = "0.4.2";
+	public static $version = "0.4.3";
 
-	public static $block;
-	public static $inline;
-	public static $lineBlock;
+	private static $inline;
+	private static $lineBlock;
 	public static $backend;
-	public static $tableBlock;
-	public static $tableStart;
-	
-	public static $inlineLookup;
-	
-	public $markupBlob;
-	public $result;
-	
+	private static $tableBlock;
+	private static $tableStart;
+	private static $inlineLookup;
+	private static $preprocessor;
+
+	/* These are set as a result of parsing */
+	public $result; /* Wikitext of result */
+
 	/**
 	 * Definitions for tokens with special meaning to the parser
 	 */
-	public static function init() {
-		/* Non fully-nestable blocks, used to strip out different general blocks of markup which need to be parsed */
-		self::$block = array(
-			'nowiki'        => new ParserBlockElement('<nowiki>',      '</nowiki>'),
-			'includeonly'   => new ParserBlockElement('<includeonly>', '</includeonly>'),
-			'noinclude'     => new ParserBlockElement('<noinclude>',   '</noinclude>'));
-		
+	public static function init($sharedVars = array()) {
 		/* Table elements. These are parsed separately to the other elements */
 		self::$tableStart =	new ParserInlineElement("{|",		"|}");
 		
@@ -56,12 +49,13 @@ class WikitextParser {
 
 		/* Inline elemens. These are parsed recursively and can be nested as deeply as the system will allow. */
 		self::$inline = array(
-			'nothing'    => new ParserInlineElement('', 			''),
-			'template'   => new ParserInlineElement('{{', 		'}}', 	'|', '='),
-			'a_internal' => new ParserInlineElement('[[', 		']]', 	'|', '='),
-			'a_external' => new ParserInlineElement('[', 		']', 	' ',  '', 1),
+			'nothing'    => new ParserInlineElement(   '', 		 ''),
+			'template'   => new ParserInlineElement( '{{', 		'}}', 	'|', '='),
+			'a_internal' => new ParserInlineElement( '[[', 		']]', 	'|', '='),
+			'a_external' => new ParserInlineElement(  '[', 		']', 	' ',  '', 1),
 			'bold'       => new ParserInlineElement("'''", 		"'''"),
-			'italic'     => new ParserInlineElement("''", 		"''"));
+			'italic'     => new ParserInlineElement( "''", 		"''"),
+			'switch'	 => new ParserInlineElement( '__',      '__'));
 
 		/* Create lookup table for efficiency */
 		$inlineLookup = array();
@@ -84,18 +78,23 @@ class WikitextParser {
 			'ol'  => new ParserLineBlockElement(array("#"),      array(),    0,     true),
 			'dl'  => new ParserLineBlockElement(array(":", ";"), array(),    0,     true),
 			'h'   => new ParserLineBlockElement(array("="),      array("="), 6,     false));
+
+		self::$preprocessor = array(
+			'noinclude'      => new ParserInlineElement("<noinclude>", "</noinclude>"),
+			'includeonly'	 => new ParserInlineElement("<includeonly>" , "</includeonly>"),
+			'arg'		     => new ParserInlineElement("{{{" , "}}}", "|", '', 1));
 	}
-	
+
 	/**
 	 * Parse a given document/page of text (main entry point)
-	 * 
+	 *
 	 * @param unknown_type $text
 	 * @param unknown_type $included
 	 */
 	public function parse($text) {
 		$parser = new WikitextParser($text);
 		return $parser -> result;
-	}	
+	}
 	
 	/**
 	 * Initialise a new parser object and parse a standalone document.
@@ -103,19 +102,13 @@ class WikitextParser {
 	 * 
 	 * @param string $text The text to parse
 	 */
-	public function WikitextParser($text, $included = false) {
-		/* Always strip out and store <nowiki> blocks */
-		$text = $this -> stripBlock('nowiki', $text, true);
-		if($included) {
-			/* If included, strip out <noinclude> blocks and throw them away */
-			$text = $this -> stripBlock('noinclude', $text, false);
-		} else {
-			/* If not included, strip out <includeonly> blocks and throw them away */
-			$text = $this -> stripBlock('includeonly', $text, false);
-		}
+	public function WikitextParser($text, $params = array()) {
+		$this -> params = $params;
+		$text = $this -> preprocess_text($text);
 		
 		/* Now divide into paragraphs */
 		$sections = explode("\n\n", str_replace("\r\n", "\n", $text));
+		
 		$newtext = "";
 		foreach($sections as $section) {
 			/* Newlines at the start/end have special meaning (compare to how this is called from parseLineBlock) */
@@ -127,13 +120,100 @@ class WikitextParser {
 	}
 	
 	/**
+	 * Handle template arguments and other oddities. This section of the parser is single-pass and linear.
+	 * @param string $text wikitext to handle
+	 * @param mixed $arg Arguments (applies only to templates) 
+	 * @param boolean $included true if the text is included, false otherwise
+	 * @return string
+	 */
+	function preprocess_text($text, $arg = array(), $included = false) {
+		$parsed = '';
+
+		$len = mb_strlen($text);
+		for($i = 0; $i < $len; $i++) {
+			$hit = false;
+			
+			foreach(self::$preprocessor as $key => $child) {
+				if(mb_strlen($child -> endTag) != 0 && $child -> endTag == mb_substr($text, $i, mb_strlen($child -> endTag))) {
+					if(($key == 'includeonly' && $included) || ($key == 'noinclude' && !$included)) {
+						$hit = true;
+						$i += mb_strlen($child -> endTag);
+						
+						/* Ignore expected end-tags */
+						break;
+					}
+				}
+				
+				if(mb_strlen($child -> startTag) != 0 && $child -> startTag == mb_substr($text, $i, mb_strlen($child -> startTag))) {
+					/* Hit a symbol. Parse it and keep going after the result */
+					$hit = true;
+					$i += mb_strlen($child -> startTag);
+					
+					if(($key == 'includeonly' && $included) || ($key == 'noinclude' && !$included)) {
+						/* If this is a good tag, ignore it! */
+						break;
+					}
+
+					/* Seek until end tag, looking for splitters */
+					$innerstart = '';
+					$innerbuffer = '';
+					for($i = $i; $i < $len; $i++) {
+						if(mb_strlen($child -> endTag) != 0 && $child -> endTag == mb_substr($text, $i, mb_strlen($child -> endTag))) {
+							$i += mb_strlen($child -> endTag);
+							if($innerstart == '') { /* No default set */
+								$innerstart = $innerbuffer;
+								$innerbuffer = '';
+							}
+
+							/* Figure out what to do with data */
+							if ($key == 'arg') {
+								if(is_numeric($innerstart)) {
+									$innerstart -= 1; /* Because the associative array will be starting at 0 */
+								}
+								if(isset($arg[$innerstart])) {
+									$parsed .= $arg[$innerstart]; // Use arg value
+								} else {
+									$parsed .= $innerbuffer; // Use embedded default
+								}
+							}
+
+							$innerstart = '';
+							$innerbuffer = '';
+							break; /* Stop inner loop(hit) */
+						}
+
+						if($child -> hasArgs && $innerstart == '' && $child -> argSep == mb_substr($text, $i, mb_strlen($child -> argSep))) {
+							/* Used for the | in {{{3|foo}} */
+							$innerstart = $innerbuffer;
+							$innerbuffer = '';
+						} else {
+							/* Append non-matching characters to buffer as we go */
+							$c = mb_substr($text, $i, 1);
+							$innerbuffer .= $c;
+						}
+					}
+				}
+			}
+
+			/* Add non-affected characters as we go */
+			if(!$hit) {
+				$c = mb_substr($text, $i, 1);
+				$parsed .= $c;
+			} else {
+				$i -= 1;
+			}
+		}
+		return $parsed;
+	}
+	
+	/**
 	 * Parse a block of wikitext looking for inline tokens, indicating the start of an element.
 	 * Calls itself recursively to search inside those elements when it finds them
 	 * 
 	 * @param string $text Text to parse
 	 * @param $token The name of the current inline element, if inside one.
 	 */
-	private function parseInline($text, $token = '') {
+	private function parseInline($text, $token = '', $options = array()) {
 		/* Quick escape if we've run into a table */
 		$inParagraph = false;
 		if($token == '' || !isset(self::$inline[$token])) {
@@ -565,34 +645,6 @@ class WikitextParser {
 		}
 
 		return array('child' => $children, 'not' => $not);
-	}
-	
-	/**
-	 * Remove blocks of text surrounded by a defined tag, storing them elsewhere for processing
-	 * 
-	 * @param string $key The name of the block to use, used to find out what tags we are using, and to store the removed elements.
-	 * @param string $text The text that is being parsed.
-	 * @param boolean $store Set to true if this block is to be tracked inside the $markupBlob variable
-	 */
-	private function stripBlock($key, $text, $store) {
-		$block = self::$block[$key];
-		$markupBlob[$key] = array();
-		
-		// TODO: Loop through $text and remove tags here
-		
-		return $text;
-	}
-}
-
-/**
- * Defines high-level block elements which store different blocks of markup, which may or may not be wikitext. Should not be nested.
- */
-class ParserBlockElement {
-	public $startTag, $endTag;
-
-	function ParserBlockElement($startTag, $endTag) {
-		$this -> startTag = $startTag;
-		$this -> endTag = $endTag;
 	}
 }
 
