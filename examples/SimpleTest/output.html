@@ -1,0 +1,221 @@
+<p>Lorem <b>ipsum dolor</b> sit amet, consectetur (<i>adipisicing elit</i>), sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+<p>Ut enim ad minim veniam, quis <u>nostrud</u> <b><i>exercitation</i></b> ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+<p>words<br/>written<br/>on<br/>separate<br/>lines<br/>will<br/>be<br/>separated<br/>by<br/>line<br/>breaks</p>
+<h2>Section</h2>
+<p>Information contained in this section.</p>
+<ul>
+<li>Lists<ul>
+<li>Nesting is well-supported<ul>
+<li>To any depth</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>more</li>
+<li>items</li>
+</ul>
+<ol>
+<li>ordered list</li>
+<li>two</li>
+<li>three</li>
+</ol>
+<dl>
+<dt>Definition list</dt>
+<dd>def<dl>
+<dd>also used for indenting</dd>
+</dl>
+</dd>
+<dt> Second term</dt>
+<dd>Another definition</dd>
+</dl>
+<h3> Different headings </h3>
+<h4> Smaller </h4>
+<h5> Again </h5>
+<p>Simple table:</p>
+<table>
+<tr>
+<td > a </td>
+<td> b </td>
+<td> c </td>
+<td> d</td>
+</tr>
+<tr>
+<td > e </td>
+<td> f </td>
+<td> g </td>
+<td> h</td>
+</tr>
+</table>
+<p>Use of table headings:</p>
+<table>
+<tr>
+<th>Name</th>
+<th>City</th>
+<th>Colour</th>
+</tr>
+<tr>
+<td> Bob </td>
+<td> Bob's town </td>
+<td> Beige</td>
+</tr>
+<tr>
+<td> Carl </td>
+<td> Carlton </td>
+<td> Blue</td>
+</tr>
+<tr>
+<td> Sherlock </td>
+<td> Holmesglen </td>
+<td> Grey</td>
+</tr>
+</table>
+<h2> Bug zone </h2>
+<h3> Bold / italics </h3>
+<p>Bold inside italics has a bug (the parser thinks the italics have been closed), but the opposite is fine:</p>
+<ul>
+<li>Foo <i>bar </i>'baz<b> quux<i></i></b></li>
+<li>foo <b>bar <i>baz</i> quux</b></li>
+</ul>
+<p>A crazy workaround involves closing the italics, opening the bold, then opening italics inside the bold (please don't actually do this):</p>
+<ul>
+<li>Foo <i>bar </i><b><i>baz</i></b><i> quux</i></li>
+</ul>
+<h3> Lists </h3>
+<p>Different types of lists cannot be mixed &mdash; they are processed separately, so the nested structure ends up being completely closed and then completely opened again. Yuck!</p>
+<ol>
+<li>order</li>
+<li>order</li>
+</ol>
+<ul>
+<li><ul><li>point below</li></ul></li>
+</ul>
+<ol>
+<li>order</li>
+</ol>
+<dl>
+<dd><dl><dd>definition term</dd></dl></dd>
+</dl>
+<ol>
+<li>order</li>
+</ol>
+<h3> Headings </h3>
+<p>The depth of a heading is determined by the number of equal-signs on the left (up to 6), so bad markup will do stuff like this:</p>
+<h6>========= like this </h6>
+<h5> or this =================</h5>
+<h3> Tables </h3>
+<p>Tables are not fully implemented; the contents of table cells are not currently parsed. <a href="http://en.wikipedia.org/wiki/Letter_frequency" class="external">real world example</a>:</p>
+<table class="wikitable sortable">
+<tr>
+<th>Letter</th>
+<th colspan="2">Relative frequency in the English language</th>
+</tr>
+<tr>
+<td align="center">'''a'''</td>
+<td align="right">{{bartable| 8.167|%|20</td>
+<td>background:blue}}</td>
+</tr>
+<tr>
+<td align="center">'''b'''</td>
+<td align="right">{{bartable| 1.492|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''c'''</td>
+<td align="right">{{bartable| 2.782|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''d'''</td>
+<td align="right">{{bartable| 4.253|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''e'''</td>
+<td align="right">{{bartable|12.702|%|20</td>
+<td>background:blue}}</td>
+</tr>
+<tr>
+<td align="center">'''f'''</td>
+<td align="right">{{bartable| 2.228|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''g'''</td>
+<td align="right">{{bartable| 2.015|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''h'''</td>
+<td align="right">{{bartable| 6.094|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''i'''</td>
+<td align="right">{{bartable| 6.966|%|20</td>
+<td>background:blue}}</td>
+</tr>
+<tr>
+<td align="center">'''j'''</td>
+<td align="right">{{bartable| 0.153|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''k'''</td>
+<td align="right">{{bartable| 0.747|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''l'''</td>
+<td align="right">{{bartable| 4.025|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''m'''</td>
+<td align="right">{{bartable| 2.406|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''n'''</td>
+<td align="right">{{bartable| 6.749|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''o'''</td>
+<td align="right">{{bartable| 7.507|%|20</td>
+<td>background:blue}}</td>
+</tr>
+<tr>
+<td align="center">'''p'''</td>
+<td align="right">{{bartable| 1.929|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''q'''</td>
+<td align="right">{{bartable| 0.095|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''r'''</td>
+<td align="right">{{bartable| 5.987|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''s'''</td>
+<td align="right">{{bartable| 6.327|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''t'''</td>
+<td align="right">{{bartable| 9.056|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''u'''</td>
+<td align="right">{{bartable| 2.758|%|20</td>
+<td>background:blue}}</td>
+</tr>
+<tr>
+<td align="center">'''v'''</td>
+<td align="right">{{bartable| 1.037|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''w'''</td>
+<td align="right">{{bartable| 2.365|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''x'''</td>
+<td align="right">{{bartable| 0.150|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''y'''</td>
+<td align="right">{{bartable| 1.974|%|20}}</td>
+</tr>
+<tr>
+<td align="center">'''z'''</td>
+<td align="right">{{bartable| 0.074|%|20}}</td>
+</tr>
+</table>

@@ -21,7 +21,7 @@
   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 class WikitextParser {
-	public static $version = "0.4";
+	public static $version = "0.4.2";
 
 	public static $block;
 	public static $inline;
@@ -50,7 +50,7 @@ class WikitextParser {
 		
 		self::$tableBlock = array(
 			'tr'      => new ParserTableElement('|-', '', '', ''),
-			'th'      => new ParserTableElement('!', '!', '!!', 1),
+			'th'      => new ParserTableElement('!', '|', '!!', 1),
 			'td'      => new ParserTableElement('|', '|', '||', 1),
 			'caption' => new ParserTableElement('|+', '', '', 0));
 
