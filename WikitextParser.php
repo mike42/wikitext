@@ -21,7 +21,7 @@
   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 class WikitextParser {
-	const version = "0.4.4";
+	const version = "0.4.5";
 	const MAX_INCLUDE_DEPTH = 32; /* Depth of template includes to put up with. set to 0 to disallow inclusion, negative to remove the limit */
 	
 	private static $inline;
@@ -51,12 +51,13 @@ class WikitextParser {
 
 		/* Inline elemens. These are parsed recursively and can be nested as deeply as the system will allow. */
 		self::$inline = array(
-			'nothing'    => new ParserInlineElement(   '', 		 ''),
-			'a_internal' => new ParserInlineElement( '[[', 		']]', 	'|', '='),
-			'a_external' => new ParserInlineElement( '[', 		']', 	' ',  '', 1),
-			'bold'       => new ParserInlineElement("'''", 		"'''"),
-			'italic'     => new ParserInlineElement( "''", 		"''"),
-			'switch'	 => new ParserInlineElement( '__',      '__'));
+			'nothing'    => new ParserInlineElement('',    ''),
+			'td'		 => new ParserInlineElement('',    ''), // Just used as a marker
+			'a_internal' => new ParserInlineElement('[[',  ']]', 	'|', '='),
+			'a_external' => new ParserInlineElement('[',   ']', 	' ', '', 1),
+			'bold'       => new ParserInlineElement("'''", "'''"),
+			'italic'     => new ParserInlineElement("''",  "''"),
+			'switch'	 => new ParserInlineElement('__',  '__'));
 
 		/* Create lookup table for efficiency */
 		$inlineLookup = array();
@@ -187,7 +188,7 @@ class WikitextParser {
 							} else if($key == 'template') {
 								/* Load wikitext of template, and preprocess it */
 								if(self::MAX_INCLUDE_DEPTH < 0 || $depth < self::MAX_INCLUDE_DEPTH) {
-									$markup = self::$backend -> getTemplateMarkup($innerCurKey);
+									$markup = trim(self::$backend -> getTemplateMarkup($innerCurKey));
 									$parsed .= $this -> preprocess_text($markup, $innerArg, true, $depth + 1);
 								}
 							}
@@ -245,7 +246,7 @@ class WikitextParser {
 	 * @param string $text Text to parse
 	 * @param $token The name of the current inline element, if inside one.
 	 */
-	private function parseInline($text, $token = '', $options = array()) {
+	private function parseInline($text, $token = '') {
 		/* Quick escape if we've run into a table */
 		$inParagraph = false;
 		if($token == '' || !isset(self::$inline[$token])) {
@@ -395,6 +396,12 @@ class WikitextParser {
 					$buffer .= $c;
 				}
 			}
+			
+			if($token == 'td') {
+				/* We only get here from table syntax if something else was being parsed, so we can quit here */
+				$parsed = $buffer;
+				return array('parsed' => $parsed, 'remainder' => $text);
+			}			
 		}
 		
 		/* Need to throw argument-driven items at the backend first here */
@@ -551,9 +558,47 @@ class WikitextParser {
 		/* Loop through each character */
 		for($i = 0; $i < $len; $i++) {
 			$hit = false;
-			// TODO: spot inline and lineBlock elements
+			/* We basically detect the start of any inline/lineblock/table elements and, knowing that the inline parser knows how to handle them, throw then wayward */
+			$c = mb_substr($text, $i, 1);
+			if(isset(self::$inlineLookup[$c])) {
+				/* There are inline elements which start with this character. Check each one,.. */
+				foreach(self::$inlineLookup[$c] as $key => $child) {
+					if(!$hit && mb_strlen($child -> startTag) != 0 && $child -> startTag == mb_substr($text, $i, mb_strlen($child -> startTag))) {
+						$hit = true;
+					}
+				}
+			}
+			if($c == "\n") {
+				if(self::$tableStart -> startTag == mb_substr($text, $i + 1, mb_strlen(self::$tableStart -> startTag))) {
+					/* Table is coming up */
+					$hit = true;
+				} else {
+					/* LineBlocks like lists and headings*/
+					$next = mb_substr($text, $i + 1, 1);
+					foreach(self::$lineBlock as $key => $block) {
+						foreach($block -> startChar as $char) {
+							if(!$hit && $next == $char) {
+								$hit = true;
+								break 2;
+							}
+						}
+					}
+				}
+			}
 			
-			if($tableElement -> inlinesep == mb_substr($text, $i, mb_strlen($tableElement -> inlinesep))) {
+			if($hit) {
+				/* Parse whatever it is and return here */
+				$start = $i;
+				$remainder = mb_substr($text, $start, $len - $start);
+				$result = $this -> parseInline($remainder, 'td');
+				$buffer .= $result['parsed'];
+				$text = $result['remainder'];
+				$len = mb_strlen($text);
+				$i = -1;
+
+			}
+			
+			if(!$hit && $tableElement -> inlinesep == mb_substr($text, $i, mb_strlen($tableElement -> inlinesep))) {
 				/* Got column separator, so this column is now finished */
 				$tmpCol['content'] = $buffer;
 				$colsSoFar[] = $tmpCol;

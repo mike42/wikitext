@@ -1,0 +1,102 @@
+This page is a test for table nesting. Return to [[home]].
+
+{|
+|-
+| foo || bar
+|-
+| baz || quux
+|}
+
+==Link in a table==
+{|
+|-
+| foo || [[bar]]
+|-
+| baz || quux
+|}
+
+==List in a table==
+{|
+|-
+| foo ||
+* a
+* b
+* c
+|-
+| baz || quux
+|}
+
+==Table in a table==
+{|
+|-
+| foo || 
+{|
+|-
+| a || b
+|-
+| c || d
+|}
+|-
+| baz || quux
+|}
+
+== Templates in a table ==
+[http://en.wikipedia.org/wiki/Letter_frequency source (en.wiki)]. Note also improvised [[bartable]] template. (we can't do parserfunctions here, hence the lack of cool bar!)
+
+{|class="wikitable sortable"
+|-
+!Letter
+!colspan="2"|Relative frequency in the English language
+|-
+|align="center"|'''a'''||align="right"|{{bartable| 8.167|%|20||background:blue}}
+|-
+|align="center"|'''b'''||align="right"|{{bartable| 1.492|%|20}}
+|-
+|align="center"|'''c'''||align="right"|{{bartable| 2.782|%|20}}
+|-
+|align="center"|'''d'''||align="right"|{{bartable| 4.253|%|20}}
+|-
+|align="center"|'''e'''||align="right"|{{bartable|12.702|%|20||background:blue}}
+|-
+|align="center"|'''f'''||align="right"|{{bartable| 2.228|%|20}}
+|-
+|align="center"|'''g'''||align="right"|{{bartable| 2.015|%|20}}
+|-
+|align="center"|'''h'''||align="right"|{{bartable| 6.094|%|20}}
+|-
+|align="center"|'''i'''||align="right"|{{bartable| 6.966|%|20||background:blue}}
+|-
+|align="center"|'''j'''||align="right"|{{bartable| 0.153|%|20}}
+|-
+|align="center"|'''k'''||align="right"|{{bartable| 0.747|%|20}}
+|-
+|align="center"|'''l'''||align="right"|{{bartable| 4.025|%|20}}
+|-
+|align="center"|'''m'''||align="right"|{{bartable| 2.406|%|20}}
+|-
+|align="center"|'''n'''||align="right"|{{bartable| 6.749|%|20}}
+|-
+|align="center"|'''o'''||align="right"|{{bartable| 7.507|%|20||background:blue}}
+|-
+|align="center"|'''p'''||align="right"|{{bartable| 1.929|%|20}}
+|-
+|align="center"|'''q'''||align="right"|{{bartable| 0.095|%|20}}
+|-
+|align="center"|'''r'''||align="right"|{{bartable| 5.987|%|20}}
+|-
+|align="center"|'''s'''||align="right"|{{bartable| 6.327|%|20}}
+|-
+|align="center"|'''t'''||align="right"|{{bartable| 9.056|%|20}}
+|-
+|align="center"|'''u'''||align="right"|{{bartable| 2.758|%|20||background:blue}}
+|-
+|align="center"|'''v'''||align="right"|{{bartable| 1.037|%|20}}
+|-
+|align="center"|'''w'''||align="right"|{{bartable| 2.365|%|20}}
+|-
+|align="center"|'''x'''||align="right"|{{bartable| 0.150|%|20}}
+|-
+|align="center"|'''y'''||align="right"|{{bartable| 1.974|%|20}}
+|-
+|align="center"|'''z'''||align="right"|{{bartable| 0.074|%|20}}
+|}

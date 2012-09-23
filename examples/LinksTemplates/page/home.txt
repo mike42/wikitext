@@ -1,3 +1,5 @@
 This is the home page. Yay! there are also [[other]] pages, but some [[dont exist]].
 
+There is also a [[tables|table nesting test page]].
+
 {{footer|home}}
