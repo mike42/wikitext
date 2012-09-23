@@ -21,7 +21,7 @@
   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 class WikitextParser {
-	const version = "0.4.5";
+	const version = "0.4.5b";
 	const MAX_INCLUDE_DEPTH = 32; /* Depth of template includes to put up with. set to 0 to disallow inclusion, negative to remove the limit */
 	
 	private static $inline;
@@ -777,7 +777,6 @@ class ParserTableElement {
  * link destinations, and other installation-specific oddities
  */
 class DefaultParserBackend {
-
 	/**
 	 * Process an element which has arguments. Links, lists and templates fall under this category
 	 * 
@@ -892,7 +891,7 @@ class DefaultParserBackend {
 		$outp .= "</$token>\n";
 		return $outp;
 	}
-	
+
 	/**
 	 * Default rendering of [[link]] or [[link|foo]]
 	 * 
@@ -910,14 +909,14 @@ class DefaultParserBackend {
 		$info = $this -> getInternalLinkInfo(array('exists' => true, 'title' => $destination, 'dest' => $destination, 'caption' => $caption));
 		return "<a href=\"".htmlspecialchars($info['dest'])."\" title=\"".htmlspecialchars($info['title'])."\">".$info['caption']."</a>";
 	}
-	
+
 	/**
-	 * Method to override when providing extra info
+	 * Method to override when providing extra info about a link
 	 */
 	public function getInternalLinkInfo($info) {
 		return $info;
 	}
-	
+
 	/**
 	 * Default rendering of [http://... link] or [http://foo]
 	 *
@@ -932,7 +931,7 @@ class DefaultParserBackend {
 		}
 		return "<a href=\"".htmlspecialchars($destination)."\" class=\"external\">".$caption."</a>";
 	}
-	
+
 	/**
 	 * Default encapsulation for '''bold'''
 	 * 

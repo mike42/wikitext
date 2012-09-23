@@ -1,6 +1,6 @@
 Lorem '''ipsum dolor''' sit amet, consectetur (''adipisicing elit''), sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
 
-Ut enim ad minim veniam, quis <u>nostrud</u> '''''exercitation''''' ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+Ut enim ad minim veniam, quis nostrud '''''exercitation''''' ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
 
 words
 written
@@ -69,76 +69,15 @@ A crazy workaround involves closing the italics, opening the bold, then opening 
 
 
 === Lists ===
-Different types of lists cannot be mixed &mdash; they are processed separately, so the nested structure ends up being completely closed and then completely opened again. Yuck!
-#order
-#order
-**point below
-#order
-::definition term
-#order
+Different types of lists cannot be mixed &mdash; the left-most structure takes precedence, and other characters are assumed to be part of the list item, not the list itself.
+# order
+# order
+#* point below
+# order
+#: definition term
+# order
 
 === Headings ===
 The depth of a heading is determined by the number of equal-signs on the left (up to 6), so bad markup will do stuff like this:
 =============== like this ==
 ===== or this =======================
-
-=== Tables ===
-Tables are not fully implemented; the contents of table cells are not currently parsed. [http://en.wikipedia.org/wiki/Letter_frequency real world example]:
-{|class="wikitable sortable"
-|-
-!Letter
-!colspan="2"|Relative frequency in the English language
-|-
-|align="center"|'''a'''||align="right"|{{bartable| 8.167|%|20||background:blue}}
-|-
-|align="center"|'''b'''||align="right"|{{bartable| 1.492|%|20}}
-|-
-|align="center"|'''c'''||align="right"|{{bartable| 2.782|%|20}}
-|-
-|align="center"|'''d'''||align="right"|{{bartable| 4.253|%|20}}
-|-
-|align="center"|'''e'''||align="right"|{{bartable|12.702|%|20||background:blue}}
-|-
-|align="center"|'''f'''||align="right"|{{bartable| 2.228|%|20}}
-|-
-|align="center"|'''g'''||align="right"|{{bartable| 2.015|%|20}}
-|-
-|align="center"|'''h'''||align="right"|{{bartable| 6.094|%|20}}
-|-
-|align="center"|'''i'''||align="right"|{{bartable| 6.966|%|20||background:blue}}
-|-
-|align="center"|'''j'''||align="right"|{{bartable| 0.153|%|20}}
-|-
-|align="center"|'''k'''||align="right"|{{bartable| 0.747|%|20}}
-|-
-|align="center"|'''l'''||align="right"|{{bartable| 4.025|%|20}}
-|-
-|align="center"|'''m'''||align="right"|{{bartable| 2.406|%|20}}
-|-
-|align="center"|'''n'''||align="right"|{{bartable| 6.749|%|20}}
-|-
-|align="center"|'''o'''||align="right"|{{bartable| 7.507|%|20||background:blue}}
-|-
-|align="center"|'''p'''||align="right"|{{bartable| 1.929|%|20}}
-|-
-|align="center"|'''q'''||align="right"|{{bartable| 0.095|%|20}}
-|-
-|align="center"|'''r'''||align="right"|{{bartable| 5.987|%|20}}
-|-
-|align="center"|'''s'''||align="right"|{{bartable| 6.327|%|20}}
-|-
-|align="center"|'''t'''||align="right"|{{bartable| 9.056|%|20}}
-|-
-|align="center"|'''u'''||align="right"|{{bartable| 2.758|%|20||background:blue}}
-|-
-|align="center"|'''v'''||align="right"|{{bartable| 1.037|%|20}}
-|-
-|align="center"|'''w'''||align="right"|{{bartable| 2.365|%|20}}
-|-
-|align="center"|'''x'''||align="right"|{{bartable| 0.150|%|20}}
-|-
-|align="center"|'''y'''||align="right"|{{bartable| 1.974|%|20}}
-|-
-|align="center"|'''z'''||align="right"|{{bartable| 0.074|%|20}}
-|}
-
