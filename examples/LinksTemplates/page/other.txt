@@ -1,3 +1,3 @@
 Other content is listed on the other page, but we are using the same footer. Back [[home]].
 
-{{footer|other}}
+{{footer|other|foo=quux}}

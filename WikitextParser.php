@@ -21,8 +21,9 @@
   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 class WikitextParser {
-	public static $version = "0.4.3";
-
+	const version = "0.4.3";
+	const MAX_INCLUDE_DEPTH = 32; /* Depth of template includes to put up with. set to 0 to disallow inclusion, negative to remove the limit */
+	
 	private static $inline;
 	private static $lineBlock;
 	public static $backend;
@@ -32,6 +33,7 @@ class WikitextParser {
 	private static $preprocessor;
 
 	/* These are set as a result of parsing */
+	public $preprocessed; /* Wikitext after preprocessor had a go at it. */
 	public $result; /* Wikitext of result */
 
 	/**
@@ -50,9 +52,8 @@ class WikitextParser {
 		/* Inline elemens. These are parsed recursively and can be nested as deeply as the system will allow. */
 		self::$inline = array(
 			'nothing'    => new ParserInlineElement(   '', 		 ''),
-			'template'   => new ParserInlineElement( '{{', 		'}}', 	'|', '='),
 			'a_internal' => new ParserInlineElement( '[[', 		']]', 	'|', '='),
-			'a_external' => new ParserInlineElement(  '[', 		']', 	' ',  '', 1),
+			'a_external' => new ParserInlineElement( '[', 		']', 	' ',  '', 1),
 			'bold'       => new ParserInlineElement("'''", 		"'''"),
 			'italic'     => new ParserInlineElement( "''", 		"''"),
 			'switch'	 => new ParserInlineElement( '__',      '__'));
@@ -80,9 +81,10 @@ class WikitextParser {
 			'h'   => new ParserLineBlockElement(array("="),      array("="), 6,     false));
 
 		self::$preprocessor = array(
-			'noinclude'      => new ParserInlineElement("<noinclude>", "</noinclude>"),
-			'includeonly'	 => new ParserInlineElement("<includeonly>" , "</includeonly>"),
-			'arg'		     => new ParserInlineElement("{{{" , "}}}", "|", '', 1));
+			'noinclude'      => new ParserInlineElement('<noinclude>', '</noinclude>'),
+			'includeonly'	 => new ParserInlineElement('<includeonly>' , '</includeonly>'),
+			'arg'		     => new ParserInlineElement('{{{' , '}}}', '|', '', 1),
+			'template'  	 => new ParserInlineElement('{{', 	'}}',  '|', '='));
 	}
 
 	/**
@@ -104,10 +106,10 @@ class WikitextParser {
 	 */
 	public function WikitextParser($text, $params = array()) {
 		$this -> params = $params;
-		$text = $this -> preprocess_text($text);
+		$this -> preprocessed = $this -> preprocess_text($text);
 		
 		/* Now divide into paragraphs */
-		$sections = explode("\n\n", str_replace("\r\n", "\n", $text));
+		$sections = explode("\n\n", str_replace("\r\n", "\n", $this -> preprocessed));
 		
 		$newtext = "";
 		foreach($sections as $section) {
@@ -120,13 +122,13 @@ class WikitextParser {
 	}
 	
 	/**
-	 * Handle template arguments and other oddities. This section of the parser is single-pass and linear.
+	 * Handle template arguments and other oddities. This section of the parser is single-pass and linear, with the exception of the part which substitutes templates
 	 * @param string $text wikitext to handle
 	 * @param mixed $arg Arguments (applies only to templates) 
 	 * @param boolean $included true if the text is included, false otherwise
 	 * @return string
 	 */
-	function preprocess_text($text, $arg = array(), $included = false) {
+	function preprocess_text($text, $arg = array(), $included = false, $depth = 0) {
 		$parsed = '';
 
 		$len = mb_strlen($text);
@@ -155,41 +157,71 @@ class WikitextParser {
 					}
 
 					/* Seek until end tag, looking for splitters */
-					$innerstart = '';
-					$innerbuffer = '';
+					$innerArg   = array();
+					$innerBuffer = '';
+					$innerCurKey = '';
+					
 					for($i = $i; $i < $len; $i++) {
+						$innerHit = false;
+						
 						if(mb_strlen($child -> endTag) != 0 && $child -> endTag == mb_substr($text, $i, mb_strlen($child -> endTag))) {
 							$i += mb_strlen($child -> endTag);
-							if($innerstart == '') { /* No default set */
-								$innerstart = $innerbuffer;
-								$innerbuffer = '';
+							/* Clear buffers now */
+							if($innerCurKey == '') {
+								array_push($innerArg, $innerBuffer);
+							} else {
+								$innerArg[$innerCurKey] = $innerBuffer;
 							}
-
+												
 							/* Figure out what to do with data */
+							$innerCurKey = array_shift($innerArg);
 							if ($key == 'arg') {
-								if(is_numeric($innerstart)) {
-									$innerstart -= 1; /* Because the associative array will be starting at 0 */
+								if(is_numeric($innerCurKey)) {
+									$innerCurKey -= 1; /* Because the associative array will be starting at 0 */
 								}
-								if(isset($arg[$innerstart])) {
-									$parsed .= $arg[$innerstart]; // Use arg value
-								} else {
-									$parsed .= $innerbuffer; // Use embedded default
+								if(isset($arg[$innerCurKey])) {
+									$parsed .= $arg[$innerCurKey]; 		// Use arg value if set
+								} elseif(count($innerArg) > 0) {
+									$parsed .= array_shift($innerArg);	// Otherwise use embedded default if set
+								}
+							} else if($key == 'template') {
+								/* Load wikitext of template, and preprocess it */
+								if(self::MAX_INCLUDE_DEPTH < 0 || $depth < self::MAX_INCLUDE_DEPTH) {
+									$markup = self::$backend -> getTemplateMarkup($innerCurKey);
+									$parsed .= $this -> preprocess_text($markup, $innerArg, true, $depth + 1);
 								}
 							}
 
-							$innerstart = '';
-							$innerbuffer = '';
+							$innerCurKey = ''; // Reset key
+							$innerBuffer = ''; // Reset parsed values
 							break; /* Stop inner loop(hit) */
 						}
 
-						if($child -> hasArgs && $innerstart == '' && $child -> argSep == mb_substr($text, $i, mb_strlen($child -> argSep))) {
-							/* Used for the | in {{{3|foo}} */
-							$innerstart = $innerbuffer;
-							$innerbuffer = '';
-						} else {
+						/* Argument splitting -- A dumber, non-recursiver version of what is used in ParseInline() */
+						if($child -> hasArgs && ($child -> argLimit == 0 || $child -> argLimit > count($innerArg))) {
+							if(mb_strlen($child -> argSep) != 0 && $child -> argSep == mb_substr($text, $i, mb_strlen($child -> argSep))) {
+								/* Hit argument separator */
+								if($innerCurKey == '') {
+									array_push($innerArg, $innerBuffer);
+								} else {
+									$innerArg[$innerCurKey] = $innerBuffer;
+								}
+								$innerCurKey = ''; // Reset key
+								$innerBuffer = ''; // Reset parsed values
+								$i += mb_strlen($child -> argSep) - 1;
+								$innerHit = true;
+							} elseif($innerCurKey == '' && mb_strlen($child -> argNameSep) != 0 && $child -> argNameSep == mb_substr($text, $i, mb_strlen($child -> argNameSep))) {
+								/* Hit name/argument splitter */
+								$innerCurKey = $innerBuffer; // Set key
+								$innerBuffer = '';  // Reset parsed values
+								$i += mb_strlen($child -> argNameSep) - 1;
+								$innerHit = true;
+							}
+						}
+	
+						if(!$innerHit) {
 							/* Append non-matching characters to buffer as we go */
-							$c = mb_substr($text, $i, 1);
-							$innerbuffer .= $c;
+							$innerBuffer .= mb_substr($text, $i, 1);
 						}
 					}
 				}
@@ -920,18 +952,14 @@ class DefaultParserBackend {
 		
 		return $outp . "</tr>\n";
 	}
-	
-	public function render_template($arg) {
-		return "(Template '" . $arg[0]."')";
-	}
-	
+
 	/**
 	 * Function to over-ride if you want to provide a mechanism for getting templates
 	 * 
 	 * @param string $template
 	 */
 	public function getTemplateMarkup($template) {
-
+		return "[[$template]]";
 	}
 }
 ?>
