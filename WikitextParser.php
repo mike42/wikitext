@@ -21,9 +21,9 @@
   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 class WikitextParser {
-	const version = "0.4.5b";
-	const MAX_INCLUDE_DEPTH = 32; /* Depth of template includes to put up with. set to 0 to disallow inclusion, negative to remove the limit */
-	
+	const version = "0.4.6";
+	const MAX_INCLUDE_DEPTH = 32; /* Depth of template includes to put up with. set to 0 to disallow inclusion, negative to remove the limit */	
+
 	private static $inline;
 	private static $lineBlock;
 	public static $backend;
@@ -388,8 +388,8 @@ class WikitextParser {
 						
 					/* Other \n-related things if it wasn't as exciting as above */
 					if($buffer != '' && !$hit) {
-						/* Put in a line break if it is not going to be the first thing added. */
-						$buffer .= "<br/>";
+						/* Put in a space if it is not going to be the first thing added. */
+						$buffer .= " ";
 					}
 				} else {
 					/* Append character to parsed output if it was not part of some token */
@@ -411,7 +411,7 @@ class WikitextParser {
 			} else {
 				$arg[$curKey] = $buffer;
 			}
-			$buffer = self::$backend -> processArgs($token, $arg);
+			$buffer = self::$backend -> renderWithArgs($token, $arg);
 		}
 		
 		if($inParagraph && $buffer != '') {
