@@ -901,13 +901,28 @@ class DefaultParserBackend {
 	 */
 	public function render_a_internal($arg) {
 		/* Figure out properties based on arguments */
-		$caption = $destination = $arg[0];
+		if(isset($arg[0])) {
+			$destination = $arg[0];
+		}
 		if(isset($arg[1])) {
 			$caption = $arg[1];
 		}
+	
+		/* Compensate for missing values */
+		if(isset($destination) && !isset($caption)) {
+			$caption = $destination; // Fill in caption = destination as default
+		}
+		if(!isset($destination)) {
+			if(isset($caption)) {
+				$destination = ""; // Empty link
+			} else {
+				return ""; // Empty link to nowhere (so skip it)
+			}
+		}
+
 		/* Allow the local app to override link properties */
 		$info = $this -> getInternalLinkInfo(array('exists' => true, 'title' => $destination, 'dest' => $destination, 'caption' => $caption));
-		return "<a href=\"".htmlspecialchars($info['dest'])."\" title=\"".htmlspecialchars($info['title'])."\">".$info['caption']."</a>";
+		return "<a href=\"".htmlspecialchars($info['dest'])."\" title=\"".htmlspecialchars($info['title'])."\"".(!$info['exists']? " class=\"new\"": '').">".$info['caption']."</a>";
 	}
 
 	/**
