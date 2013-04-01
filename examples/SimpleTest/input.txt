@@ -70,7 +70,6 @@ Bold inside italics has a bug (the parser thinks the italics have been closed), 
 A crazy workaround involves closing the italics, opening the bold, then opening italics inside the bold (please don't actually do this):
 *Foo ''bar '''''''baz''''''' quux''
 
-
 === Lists ===
 Different types of lists cannot be mixed &mdash; the left-most structure takes precedence, and other characters are assumed to be part of the list item, not the list itself.
 # order
@@ -84,3 +83,5 @@ Different types of lists cannot be mixed &mdash; the left-most structure takes p
 The depth of a heading is determined by the number of equal-signs on the left (up to 6), so bad markup will do stuff like this:
 =============== like this ==
 ===== or this =======================
+Bug in rendering of heading:
+==test== 
