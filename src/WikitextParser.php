@@ -981,7 +981,7 @@ class DefaultParserBackend {
 		}
 
 		$this -> interwiki = array();
-		if(!@$data = file_get_contents(dirname(__FILE__) . "/interwiki-default.ser")) {
+		if(!@$data = file_get_contents(dirname(__FILE__) . "/interwiki.ser")) {
 			/* Return blank array if interwiki table doesnt exist */
 			return;
 		}

@@ -1,5 +1,5 @@
 <?
-require_once("../../WikitextParser.php");
+require_once("../../wikitext.php");
 
 /**
  * The custom behaviour of templates and links needs to be defined here:

@@ -1,6 +1,6 @@
 #!/usr/bin/php
 <?
-require_once("../../WikitextParser.php");
+require_once("../../wikitext.php");
 $input = file_get_contents("input.txt");
 
 /* The most rudimentary way to invoke the parser */
