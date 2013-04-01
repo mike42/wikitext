@@ -21,7 +21,7 @@
   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 class WikitextParser {
-	const version = "0.5";
+	const version = "0.5.1";
 	const MAX_INCLUDE_DEPTH = 32; /* Depth of template includes to put up with. set to 0 to disallow inclusion, negative to remove the limit */	
 
 	private static $inline;
@@ -455,6 +455,7 @@ class WikitextParser {
 				$line = mb_substr($line, $count, mb_strlen($line) - $count);
 				if(count($lineBlockElement -> endChar) > 0) {
 					/* Also need to cut off end letters, such as in == Heading == */
+					$line = rtrim($line);
 					$endcount = self::countChar($lineBlockElement -> endChar, strrev($line), $lineBlockElement -> limit);
 					$line = mb_substr($line, 0, mb_strlen($line) - $endcount);
 				}
