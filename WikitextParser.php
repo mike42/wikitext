@@ -777,6 +777,8 @@ class ParserTableElement {
  * link destinations, and other installation-specific oddities
  */
 class DefaultParserBackend {
+	private $interwiki;
+
 	/**
 	 * Process an element which has arguments. Links, lists and templates fall under this category
 	 * 
@@ -920,9 +922,49 @@ class DefaultParserBackend {
 			}
 		}
 
-		/* Allow the local app to override link properties */
-		$info = $this -> getInternalLinkInfo(array('exists' => true, 'title' => $destination, 'dest' => $destination, 'caption' => $caption));
-		return "<a href=\"".htmlspecialchars($info['dest'])."\" title=\"".htmlspecialchars($info['title'])."\"".(!$info['exists']? " class=\"new\"": '').">".$info['caption']."</a>";
+		$info = array(	'url' => $destination, /* You should override getInternalLinkInfo() to set this better according to your application. */
+						'title' => $destination, /* Eg [[foo:bar]] links to "foo:bar". */
+						'namespace' => $destination, /* Eg [[foo:bar]] is in namespace 'foo' */
+						'target' => $destination, /* Eg [[foo:bar]] has the target "bar" within the namespace. */
+						'namespaceignore' => false, /* eg [[:File:foo.png]], link to the image don't include it */
+						'caption' => $caption, /* The link caption eg [[foo:bar|baz]] has the caption 'baz' */
+						'exists' => true, /* Causes class="new" for making red-links */
+						'external' => false);
+
+		/* Attempt to deduce namespaces */
+		$split = strpos($destination, ":", 1);
+		if(!$split === false) {
+			/* We have namespace */
+			if(substr($destination, 0, 1) == ":") { /* Eg [[:category:foo]] */
+				$info['namespaceignore'] = true;
+				$info['namespace'] = substr($destination, 1, $split - 1);
+			} else {
+				$info['namespace'] = substr($destination, 0, $split);
+			}
+
+			$split++;
+			$info['target'] = substr($destination, $split, strlen($destination) - $split);
+
+			/* Look up in default interwiki table */
+			if($this -> interwiki == false) {
+				/* Load as needed */
+				$this -> loadInterwikiLinks();
+			}
+
+			if(isset($this -> interwiki[$info['namespace']])) {
+				/* We have a known namespace */
+				$site = $this -> interwiki[$info['namespace']];
+				$info['url'] = str_replace("$1", $info['target'], $site);
+			}
+		}
+
+		/* Allow the local app to contribute to link properties */
+		$info = $this -> getInternalLinkInfo($info);
+		if(isset($info['html'])) {
+			/* Completely override link markup (can be used for rendering [[File:...]] for example. */
+			return $markup;
+		}
+		return "<a href=\"".htmlspecialchars($info['url'])."\" title=\"".htmlspecialchars($info['title'])."\"".(!$info['exists']? " class=\"new\"": '').">".$info['caption']."</a>";
 	}
 
 	/**
@@ -930,6 +972,29 @@ class DefaultParserBackend {
 	 */
 	public function getInternalLinkInfo($info) {
 		return $info;
+	}
+
+	public function loadInterwikiLinks() {
+		if($this -> interwiki != false) {
+			/* Use loaded interwiki links if they exist */
+			return;
+		}
+
+		$this -> interwiki = array();
+		if(!@$data = file_get_contents(dirname(__FILE__) . "/interwiki-default.ser")) {
+			/* Return blank array if interwiki table doesnt exist */
+			return;
+		}
+
+		/* Unserialize data and load into associative array for easy lookup */
+		$arr = unserialize($data);
+		if(isset($arr['query']['interwikimap'])) {
+			foreach($arr['query']['interwikimap'] as $site) {
+				if(isset($site['prefix']) && isset($site['url'])) {
+					$this -> interwiki[$site['prefix']] = $site['url'];
+				}
+			}
+		}
 	}
 
 	/**
