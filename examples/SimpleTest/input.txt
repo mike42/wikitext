@@ -83,5 +83,4 @@ Different types of lists cannot be mixed &mdash; the left-most structure takes p
 The depth of a heading is determined by the number of equal-signs on the left (up to 6), so bad markup will do stuff like this:
 =============== like this ==
 ===== or this =======================
-Bug in rendering of heading:
-==test== 
+

@@ -152,7 +152,7 @@ class DefaultParserBackend {
 
 		$info = array(	'url' => $destination, /* You should override getInternalLinkInfo() to set this better according to your application. */
 						'title' => $destination, /* Eg [[foo:bar]] links to "foo:bar". */
-						'namespace' => $destination, /* Eg [[foo:bar]] is in namespace 'foo' */
+						'namespace' => '', /* Eg [[foo:bar]] is in namespace 'foo' */
 						'target' => $destination, /* Eg [[foo:bar]] has the target "bar" within the namespace. */
 						'namespaceignore' => false, /* eg [[:File:foo.png]], link to the image don't include it */
 						'caption' => $caption, /* The link caption eg [[foo:bar|baz]] has the caption 'baz' */
@@ -160,14 +160,19 @@ class DefaultParserBackend {
 						'external' => false);
 
 		/* Attempt to deduce namespaces */
-		$split = strpos($destination, ":", 1);
+		if($destination == '') {
+			$split = false;
+		} else {
+			$split = strpos($destination, ":", 1);
+		}
+
 		if(!$split === false) {
 			/* We have namespace */
 			if(substr($destination, 0, 1) == ":") { /* Eg [[:category:foo]] */
 				$info['namespaceignore'] = true;
-				$info['namespace'] = substr($destination, 1, $split - 1);
+				$info['namespace'] = strtolower(substr($destination, 1, $split - 1));
 			} else {
-				$info['namespace'] = substr($destination, 0, $split);
+				$info['namespace'] = strtolower(substr($destination, 0, $split));
 			}
 
 			$split++;
@@ -179,7 +184,11 @@ class DefaultParserBackend {
 				$this -> loadInterwikiLinks();
 			}
 
-			if(isset($this -> interwiki[$info['namespace']])) {
+			if($info['namespace'] == 'file') {
+				/* Render an image instead of a link if requested */
+				$info['caption'] = '';
+				return $this -> render_file($info, $arg);
+			} else if(isset($this -> interwiki[$info['namespace']])) {
 				/* We have a known namespace */
 				$site = $this -> interwiki[$info['namespace']];
 				$info['url'] = str_replace("$1", $info['target'], $site);
@@ -188,11 +197,84 @@ class DefaultParserBackend {
 
 		/* Allow the local app to contribute to link properties */
 		$info = $this -> getInternalLinkInfo($info);
-		if(isset($info['html'])) {
-			/* Completely override link markup (can be used for rendering [[File:...]] for example. */
-			return $markup;
-		}
 		return "<a href=\"".htmlspecialchars($info['url'])."\" title=\"".htmlspecialchars($info['title'])."\"".(!$info['exists']? " class=\"new\"": '').">".$info['caption']."</a>";
+	}
+
+	public function render_file($info, $arg) {
+		$info['thumb'] = $info['url']; /* Default no no server-side thumbs */
+		$info['class'] = '';
+		$info['page'] = '';
+		$info['caption'] = '';
+
+		$target = $info['target'];
+		$pos = strrpos($target, ".");
+		if($pos === false) {
+			$ext = '';
+		} else {
+			$pos++;
+			$ext = substr($target, $pos, strlen($target) - $pos);
+		}
+
+		switch($ext) {
+		case 'jpg':
+		case 'jpeg':
+		case 'png':
+		case 'gif':
+			/* Named arguments */
+			if(isset($arg['link'])) { // |link=
+				$info['url'] = $arg['link'];
+				unset($arg['link']);
+			}
+			if(isset($arg['class'])) { // |class=
+				$info['class'] = $arg['class'];
+				unset($arg['class']);
+			}
+			if(isset($arg['alt'])) { // |alt=
+				$info['title'] = $arg['alt'];
+				unset($arg['alt']);
+			}
+			if(isset($arg['page'])) { // |alt=
+				$info['page'] = $arg['page'];
+				unset($arg['page']);
+			}
+
+			foreach($arg as $key => $item) {
+				/* Figure out unnamed arguments */
+				if(is_numeric($key)) { /* Any unsupported named arguments will be ignored */
+					switch($arg) {
+						/* TODO: Spot all flags, see: http://www.mediawiki.org/wiki/Help:Images */
+						default:
+							$caption = $arg;
+					}
+				}
+			}
+
+			$info = $this -> getImageInfo($info);
+
+			if($info['namespaceignore'] || !$info['exists']) {
+				/* Only link to the image, do not display it */
+				if($info['caption'] == '') {
+					$info['caption'] = $info['target'];
+				}
+				return "<a href=\"".htmlspecialchars($info['url'])."\" title=\"".htmlspecialchars($info['title'])."\"".(!$info['exists']? " class=\"new\"": '').">".$info['caption']."</a>";
+			} else {
+				//print_r($info);
+				// TODO: Add support for all the flags once they're detected above */
+				return "<a href=\"".htmlspecialchars($info['url'])."\"><img src=\"".htmlspecialchars($info['thumb'])."\" alt=\"".htmlspecialchars($info['title']). "\" /></a>";
+			}
+			
+			break;
+		default:
+			/* Something unsupported */
+			return "<b>(unsupported media file)</b>";
+		}
+	}
+
+	/**
+	 * Method to override when providing extra info about an image (basically external URL and thumbnail path)
+	 */
+	public function getImageInfo($info) {
+		return $info;
 	}
 
 	/**

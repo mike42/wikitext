@@ -1,0 +1,383 @@
+:''This test text is from [http://en.wikipedia.org/w/index.php?title=Wikipedia:Extended_image_syntax]'', and is available under the Creative Commons Attribution/Share-Alike License. It is used here to test the current state of image rendering in the parser back-end.''.
+
+In brief, the syntax for displaying an image is (see [[Wikipedia:Extended image syntax#Multimedia syntax|Multimedia syntax]] below for extra syntax for sound and multimedia files):
+
+:<code><nowiki>[[File:</nowiki></code>'''''Name'''''<code>|</code>'''''Type'''''<code>|</code>'''''Border'''''<code>|</code>'''''Location'''''<code>|</code>'''''Alignment'''''<code>|</code>'''''Size'''''<code>|link=</code>'''''Link'''''<code>|alt=</code>'''''Alt'''''<code>|</code>'''''Caption'''''<code>]]</code>
+
+Only '''''Name''''' is required. Most images should use "<code><nowiki>[[File:</nowiki></code>'''''Name'''''<code>|thumb|alt=</code>'''''Alt'''''<code>|</code>'''''Caption'''''<code>]]</code>" and should not specify a size. The other details are optional and can be placed in any order.
+
+; ''Type'' : "<code>thumb</code>" (or "<code>thumbnail</code>"; either can be followed by "<code>=<var>filename</var></code>"), "<code>frame</code>" (or "<code>framed</code>"), or "<code>frameless</code>". Display the image with specific formatting (see below).
+; ''Border'' : "<code>border</code>". Put a small border around the image.
+; ''Location'' : "<code>right</code>", "<code>left</code>", "<code>center</code>" or "<code>none</code>". Determine the horizontal placement of the image on the page. This defaults to "<code>right</code>" for thumbnails.
+; ''Alignment'' : "<code>baseline</code>", "<code>middle</code>", "<code>sub</code>", "<code>super</code>", "<code>text-top</code>", "<code>text-bottom</code>", "<code>top</code>", or "<code>bottom</code>". Vertically align the image with respect to adjacent text. This defaults to "<code>middle</code>".
+; ''Size'' : "'''Width'''<code>px</code>" or "<code>x</code>'''Height'''<code>px</code>" or "'''Width'''<code>x</code>'''Height'''<code>px</code>" or "<code>upright</code>" or "<code>upright='''Factor'''</code>". Scale the image to be no greater than the given width and/or height, keeping its aspect ratio. With "<code>upright</code>", scale a thumbnail from its default size by the given factor (default 0.75), rounding the result to the nearest multiple of 10 pixels. Size is disabled when the image is 'framed'.
+; ''Link'' : Link the image to a different resource, or to nothing. Must not be set for non-public domain images unless attribution is provided in some other fashion.
+; ''Alt'' : Specify the [[alt attribute|alt text]] for the image. This is intended for visually impaired readers. See [[WP:ALT]] for how this should typically differ from the caption.
+; ''Caption'' : Specify the image's caption. This is visible only if "frame" or "thumb" attribute is used, but may be displayed on [[mouseover]] in other cases.
+
+It does not matter whether the file is from [[Wikimedia Commons]] or on Wikipedia; the same syntax is used.
+
+==Detailed syntax==
+
+The image syntax begins with "<code><nowiki>[[</nowiki></code>", contains components separated by "<code>|</code>", and ends with "<code><nowiki>]]</nowiki></code>". The "<code><nowiki>[[</nowiki></code>" and the first "<code>|</code>" (or, if there is no "<code>|</code>", the terminating "<code><nowiki>]]</nowiki></code>") must be on the same line; other spaces and line breaks are ignored if they are next to "<code>|</code>" characters or just inside the brackets. Spaces or line breaks are not allowed just before the "<code>=</code>" in the following options, and may have undesirable side effects if they appear just after the "<code>=</code>".
+
+===Type===
+Zero or one of these options may be specified to control whether or not the image is scaled down and given a border.
+; <code>thumb</code> : (Or '''<code>thumbnail</code>'''.) Scale the image down, and put a box around the image. Show any caption below the image. Place the image on the right unless overridden with the location attribute. If no image size is specified, use a per-user preference for logged-in users (see "Thumbnail size" under {{myprefs|Appearance|Files}}), defaulting to 220 pixels for non-logged-in users. With an operand, ''e.g.'', "<code>thumb=Example.png</code>", the operand names an image that is used as the thumbnail, ignoring any size specification.
+; <code>frame</code> : Preserve the original image size, and put a box around the image. Show any caption below the image. Sizing does not work when "<code>frame</code>" is used.
+; ''(nothing specified)'' : Preserve the original image size, and do not add a border around the image. Do not show a caption. If no alt text is specifically requested, use the requested caption as alt text.
+; <code>frameless</code> : Like "<code>thumb</code>", but omit the visible caption and the box around the image. Another way to put it is that this is like specifying no type, except that the default size is that of a thumbnail and the "<code>upright</code>" option works.
+
+=== Border ===
+; <code>border</code> : Generate a one-pixel border around the image. This has an effect only around unframed images, as framed images always have borders.
+
+===Location===
+Zero or one of these options may be specified to control the position of the image.
+; <code>right</code> : Place the image on the right side of the page. The article text that follows the image flows around the image. This is the default.
+; <code>left</code> : Place the image on the left side of the page. The article text that follows the image flows around the image.
+; <code>center</code> : Place the image in the center of the page. The article text that follows the image is placed below the image.
+; <code>none</code> : Place the image on the left side of the page. The article text that follows the image is placed below the image.
+
+===Vertical alignment===
+
+Zero or one of these options may be specified to control the vertical alignment of the image with respect to adjacent text. These options apply only to plain images, which do not cause breaks and are not floated. In the following list, each option's explanation is preceded by what ''[[:File:Flag of Hungary vertical.svg]]'' looks like when aligned with that option, using the markup:
+: <code><nowiki>[[File:Flag of Hungary vertical.svg|</nowiki>''option''<nowiki>|8px|link=|alt=]]</nowiki></code>
+
+; <code>baseline</code>: [[File:Flag of Hungary vertical.svg|baseline|8px|link=|alt=]]Align the bottom of the image with the [[Baseline (typography)|baseline]] of the text.
+
+; middle: [[File:Flag of Hungary vertical.svg|middle|8px|link=|alt=]](This is the default.) Align the vertical middle of the image with the baseline of the text plus half the [[x-height]] of the text, so that the image is vertically centered around a lower case "x" in the text.
+
+; sub: [[File:Flag of Hungary vertical.svg|sub|8px|link=|alt=]]Align the bottom of the image to the same level that the bottom of a subscript would be, such as the bottom of the "2" in "X<sub>2</sub>".
+
+; super: [[File:Flag of Hungary vertical.svg|super|8px|link=|alt=]]Align the bottom of the image to the same level that the bottom of a superscript would be, such as the bottom of the "2" in "X<sup>2</sup>".
+
+; text-top: [[File:Flag of Hungary vertical.svg|text-top|8px|link=|alt=]]Align the top of the image to the top of the text. This is often a bit higher than the top of a capital letter, because of [[Ascender (typography)|ascenders]] in letters like lower-case "h".
+
+; text-bottom: [[File:Flag of Hungary vertical.svg|text-bottom|8px|link=|alt=]]Align the bottom of the image to the bottom of the text. This is somewhat lower than the baseline, because of [[descender]]s in letters like lower-case "y".
+
+; top: [[File:Flag of Hungary vertical.svg|top|8px|link=|alt=]]Align the top of the image to the top of the line containing the text. Normally this is slightly higher than the top of the text, to make space between lines of text.
+
+; bottom: [[File:Flag of Hungary vertical.svg|bottom|8px|link=|alt=]]Align the bottom of the image to the bottom of the line containing the text. Normally this is slightly lower than the bottom of the text.
+
+===Size===
+
+Zero or one of these options may be specified to control the size of the image. In the case of images with captions, if the image is already smaller than the requested size, then the image retains its original size (it is not enlarged). In the case of images without captions, the image will be enlarged or reduced to match the requested size. Sizing is disabled when a 'frame' is used.
+; ''Width''<code>px</code> : (''E.g.'', "<code>100px</code>".) Scale the image to make it the specified number of pixels in width, and scale the height to retain the original aspect ratio.
+; <code>x</code>''Height''<code>px</code> : (''E.g.'', "<code>x150px</code>".) Scale the image to make it the specified number of pixels in height, and scale the width to retain the original aspect ratio.
+; ''Width''<code>x</code>''Height''<code>px</code> : (''E.g.'', "<code>100x150px</code>".) Scale the image to be no wider and no higher than the specified number of pixels. The image will keep its original aspect ratio.
+; ''(nothing specified)'' : For thumbnails, use the size specified in preferences for logged in users, and use a size determined by resolution for anonymous users. For non-thumbnails, use the native size of the image.
+; <code>upright</code> : Scale a thumbnail image to 75% of normal thumbnail width, rounding the result to the nearest multiple of 10 pixels.
+; <code>upright=</code>''Factor'' : Adjust a thumbnail's size to '''''Factor''''' times the default thumbnail size, rounding the result to the nearest multiple of 10. For instance, "<code>upright=1.5</code>" makes the image larger, which is useful for maps or schematics that need to be larger to be readable. The parameter "<code>upright=1</code>" returns the same size as thumbnail width, and "<code>upright=0.75</code>" is functionally identical to "<code>upright</code>" alone.
+
+The "<code>upright</code>" option must be used along with the "<code>thumb</code>" parameter.
+
+===Link===
+
+Ordinarily, an image acts as a hypertext link to the [[Help:Image page|image description page]], a page with information about the image itself. Using the link option allows an image to act as a hypertext link to a different page. See [[Wikipedia:Images linking to articles]] for more information.
+; <code>link=</code>''Page'' : The image acts as a hypertext link to the specified page. Do not enclose the page name in square brackets. If '''''Page''''' is a URL, the image acts as an external link; otherwise it links to the named Wikipedia page.
+; <code>link=</code> : No hyperlink is created. Clicking on the image will have no action.
+The "<code>link</code>" parameter cannot be used in conjunction with "<code>thumb</code>", as "<code>thumb</code>" is always meant to link to the larger version of the image. In addition, "<code>link</code>" cannot be used with "<code>frame</code>".
+
+[[File:Example.svg‎|thumb|120px|right|File:Example.svg‎ rendered as a thumbnail above; [[Media:Example.svg‎]] is the direct link]]
+One may wish to link directly to the image file without displaying any thumbnail or preview image at all, possibly useful for downloading or viewing directly with a compatible browser. The example SVG at the right contains '''<code><nowiki>[[Media:Example.svg‎]]</nowiki></code>''' as such a [[Wikipedia:Media namespace#Virtual namespaces|virtual Media:]] link in its caption.
+
+===Alt text and caption===
+
+Zero or more of these options may be specified to control the ''alt text'', ''link title'', and ''caption'' for the image. Captions may contain embedded wiki markup, such as links or formatting. See [[Wikipedia:Captions]] for discussion of appropriate caption text. See [[Wikipedia:Alternative text for images]] for discussion of appropriate alt text. Internet Explorer displays the link title as a tooltip but other browsers may not.
+
+; <code>alt=</code>''Alt'' : Use '''''Alt''''' as the alt text for the image.
+; ''Caption'': (any text that is not recognised as some other part of the image syntax): How this text is used depends on the image type. When the type has a visible caption ("<code>thumbnail</code>", "<code>thumb</code>", "<code>frame</code>" or "<code>framed</code>") then this text appears as a caption below the image. Otherwise, (if the image type is unspecified or is "<code>frameless</code>"), this text is used for the link title provided the link has not been suppressed with "<code>|link=</code>", and also for the alt text provided an explicit <code>alt=</code>'''''Alt''''' has not been supplied.
+
+The actual alt text for the displayed image will be one of the following, in order of preference:
+# The explicitly requested '''''Alt''''', if any;
+# The explicitly requested '''''Caption''''', if the image type has no visible caption;
+# The empty string, if there is an explicitly requested '''''Caption''''' and the image type has a visible caption.
+# The image file name if there is no explicitly requested '''''Alt''''' or '''''Caption'''''. This is never a satisfactory option.
+
+It is only possible to specify the link title text for images with no visible caption (as described above). However, as not all browsers display this text, and it is ignored by screen readers, there is little point.
+
+==How to display an image in uploaded size, with a caption==
+
+To display an image as uploaded with a caption use <code><nowiki>[[File:Westminstpalace.jpg|frame|none|alt=Alt text|Caption text]]</nowiki></code>.
+
+[[File:Westminstpalace.jpg|frame|none|alt=Alt text|Caption text]]
+
+==How to display an image with no caption or formatting==
+
+The old syntax for images without captions is <code><nowiki>[[File:Westminstpalace.jpg|Alt text]]</nowiki></code>. This is rendered inline, and the specified text is used as the image's ''alt'' attribute (alternate text for programs which cannot display images, such as [[screen reader]]s) and as the ''title'' attribute (supplementary text, often displayed as a tooltip when the mouse is over the image).
+
+See [[Wikipedia:Image markup with HTML]] for an old, deprecated, way of putting a caption under the image using HTML code. Please use the new way of associating captions with images, as described on this page.
+
+See [[Wikipedia:Captions]] for discussion of appropriate caption text. See [[Wikipedia:Alternative text for images]] for discussion of appropriate alt text.
+
+===Example===
+[[File:Westminstpalace.jpg|Alt text]]
+
+==New syntax for images==
+
+[[File:Westminstpalace.jpg|thumb|100px|left|alt=A large clock tower and other buildings line a great river.|The Palace of Westminster]]
+
+The new syntax is backward compatible, so articles don't have to be changed.
+In the syntax <code><nowiki>[[</nowiki>File:''filename''|''options''<nowiki>]]</nowiki></code> (''e.g.'', <code><nowiki>[[File:Westminstpalace.jpg|thumb|100px|left|alt=A large clock tower and other buildings line a great river.|The Palace of Westminster]]</nowiki></code> shown in the left), several options can be set when including an image. Those affect the placing of the image, its size or the way the image will be presented. The options are <code>right</code>, <code>left</code>, <code>center</code>, <code>none</code>, <code>''size''px</code>, <code>thumbnail</code> (<code>thumb</code>), <code>frame</code>, and <code>''alternate (caption) text''</code>.{{clr}}
+
+[[File:Westminstpalace.jpg|thumb|alt=A large clock tower and other buildings line a great river.|The Palace of Westminster|200px|right|From the Thames]]
+* The options can be combined, and vertical bars ("|") are used to separate options from each other.
+* Do not put spaces around the vertical bars for readability &ndash; options will not be interpreted correctly.
+* The options can be put in any order.
+* An unknown option is taken as the caption text, but this will appear only if <code>thumbnail</code> or <code>frame</code> are specified.
+* If there are two or more unknown options, the last one upstages the rest: <code><nowiki>[[File:Westminstpalace.jpg|thumb|alt=A large clock tower and other buildings line a great river.|The Palace of Westminster|200px|right|From the Thames]]</nowiki></code> (shown on the right).{{clr}}
+
+Here is the description of the options other than the caption text:
+
+===right===
+[[File:Westminstpalace.jpg|right|70px|alt=A large clock tower and other buildings line a great river.]]The image is right-aligned, and text floats to the left of the image: <code><nowiki>[[File:Westminstpalace.jpg|right|70px|alt=A large clock tower and other buildings line a great river.]]</nowiki></code> (shown on the right).{{clr}}<hr>
+
+===left===
+[[File:Westminstpalace.jpg|left|70px|alt=A large clock tower and other buildings line a great river.]]The image is left aligned, and text floats to the right of the image: <code><nowiki>[[File:Westminstpalace.jpg|left|70px|alt=A large clock tower and other buildings line a great river.]]</nowiki></code> (shown on the left).{{clr}}<hr>
+
+===center===
+The image is centered, and... [[File:Westminstpalace.jpg|center|70px|alt=A large clock tower and other buildings line a great river.]] the text following the image starts below it: <code><nowiki>[[File:Westminstpalace.jpg|center|70px|alt=A large clock tower and other buildings line a great river.]]</nowiki></code> (shown above).{{clr}}<hr>
+
+===none===
+
+The image is put at the left, and... [[File:Westminstpalace.jpg|none|70px|alt=A large clock tower and other buildings line a great river.]] the text following does not float to the right (or to the left, obviously), and starts below it: <code><nowiki>[[File:Westminstpalace.jpg|none|70px|alt=A large clock tower and other buildings line a great river.]]</nowiki></code> (shown above).{{clr}}<hr/>
+
+:: '''Notes:'''{{clr}}
+::[[File:Westminstpalace.jpg|center|left|none|right|70px|alt=A large clock tower and other buildings line a great river.]] The four options below (center, left, none, and right) are incompatible. When used combined, the first one overrides the rest: <code><nowiki>[[File:Westminstpalace.jpg|center|left|none|right|70px|alt=A large clock tower and other buildings line a great river.]]</nowiki></code> (shown in the center).{{clr}}
+
+::[[File:Westminstpalace.jpg|70px|alt=A large clock tower and other buildings line a great river.|right]] What is between the last vertical bar and the closing brackets ("]]"), void or not, is taken as the last option, and works as usual. For instance, when the last option is <code>right</code>, the image is right-aligned, and text floats to the left: <code><nowiki>[[File:Westminstpalace.jpg|70px|alt=A large clock tower and other buildings line a great river.|right]]</nowiki></code> (shown on the right).{{clr}}
+
+::[[File:Westminstpalace.jpg|thumb|alt=A large clock tower and other buildings line a great river.|This text is not displayed.|70px|left|]][[File:Westminstpalace.jpg|thumb|alt=A large clock tower and other buildings line a great river.|This text is displayed.|70px|right]] In particular, if the last option is the void text (that is, if there is nothing between the last vertical bar and the closing brackets), the caption is not displayed: <code><nowiki>[[File:Westminstpalace.jpg|thumb|alt=A large clock tower and other buildings line a great river.|This text is not displayed.|70px|left|]]</nowiki></code> (shown on the left) and <code><nowiki>[[File:Westminstpalace.jpg|thumb|alt=A large clock tower and other buildings line a great river.|This text is displayed.|70px|right]]</nowiki></code> (shown on the right).{{clr}}
+
+; <code>''size''px</code> : [[File:Westminstpalace.jpg|right|50px|alt=A large clock tower and other buildings line a great river.]] This option renders a version of the image that's ''[size]'' pixels wide (''e.g.'', <code><nowiki>[[File:Westminstpalace.jpg|right|50px|alt=A large clock tower and other buildings line a great river.]]</nowiki></code> shown on the right). Height is computed to keep the ratio (i.e. the shape of the image).{{clr}}
+
+:: '''Notes:'''{{clr}}
+::Specifying a size does not just change the apparent image size using HTML; it actually generates a resized version of the image on the fly and links to it appropriately. This happens whether or not you specify the size in conjunction with "<code>thumb</code>".''
+
+::This means the server does all the work of changing the image size, not the web browser of the user. By having the server do all the work means faster downloading of pages. It also means that larger images can be stored on the server without any slowdown by the browser (especially on dial up telephone lines). Only the data for the actual size on the page is transmitted.
+
+::An exception is animated GIF images. Animated GIF images are not processed by the server. When a smaller size is specified the original full sized animated GIF image is served. Whether the animated GIF image is subsequently scaled to fit the allotted space belongs to the capabilities of the receiving browser. Resizing an animated GIF image will significantly reduce its quality, without any reduction of download time.
+
+::From [[m:MediaWiki 1.5|MediaWiki 1.5]] the default thumbnail width can be set in the preferences, so it is recommended ''not'' to specify "px", in order to respect the users' preferences (unless, for a special reason, a specific size is required regardless of preferences, or a size is specified outside the range of widths 120–300 pixels that can be set in the preferences).
+
+:: If you specify a "frame" option the image will not be scaled, and no size specifiers will be in the HTML. The image will be rendered at full size.{{clr}}
+
+:: [[File:Westminstpalace.jpg|right|50px|80px|alt=A large clock tower and other buildings line a great river.]] When there are two or more "size" options, only the last one is valid: <code><nowiki>[[File:Westminstpalace.jpg|right|50px|80px|alt=A large clock tower and other buildings line a great river.]]</nowiki></code> (shown on the right).{{clr}}
+
+; <code>thumbnail</code>, <code>thumb</code> : [[File:Westminstpalace.jpg|thumbnail|left|100px|alt=A large clock tower and other buildings line a great river.]] [[File:Westminstpalace.jpg|thumb|alt=A large clock tower and other buildings line a great river.|The Palace of Westminster]] The <code>thumbnail</code> (<code>thumb</code>) option generates an image. It is automatically resized when the "size" attribute is not specified. Without the options <code>left</code>, <code>center</code>, and <code>none</code>, the image is normally on the right. If the image has a caption text, it is displayed in the lower margin. ''E.g.'', <code><nowiki>[[File:Westminstpalace.jpg|thumbnail|left|100px|alt=A large clock tower and other buildings line a great river.]]</nowiki></code> (shown on the left) and <code><nowiki>[[File:Westminstpalace.jpg|thumb|alt=A large clock tower and other buildings line a great river.|The Palace of Westminster]]</nowiki></code> (shown on the right). ''Note: thumbnail (thumb) cannot be used in lists.''
+{{clr}}
+
+<!-- The following paragraph is supposed to show how one can display a 10 by 10 pixel image as 100 by 100, and that clicking on "enlarge" actually shows it smaller (in the original size). But it doesn't seem to work — the image is displayed 10 by 10. -->
+[[File:tst.png|right|thumb|100px|alt=Tiny globe|This is a globe, and take a look at it in [[Media:tst.png|the actual size]].]] An "enlarge" icon is put also in the lower margin of the thumbnail. Both the image itself and the icon link to the image description page with the image in its actual size. The icon shows the link title "Enlarge" in its hoverbox, even in cases where this term does not apply, because it leads from the enlarged image to the one with the actual size. ''E.g.'', <code><nowiki>[[File:tst.png|right|thumb|100px|alt=Tiny globe|This is a globe, and take a look at it in [[Media:tst.png|the actual size]].]]</nowiki></code> (shown on the right).{{clr}}
+
+; <code>upright</code> : [[File:Westminstpalace.jpg|thumbnail|upright|left|alt=A large clock tower and other buildings line a great river.|The "<code>upright</code>" option is about 75% of thumbnail width.]] [[File:Westminstpalace.jpg|thumb|upright=1.5|right|alt=A large clock tower and other buildings line a great river.|The "<code>upright=1.5</code>" option]] The <code>upright</code> option works in combination with the <code>thumbnail</code> or <code>thumb</code> option to resize an image to about 75% of the width of a plain <code>thumbnail</code>. The <code>upright</code> option scales larger or smaller in step with user screen resolution. The relative size can be determined with a multiplier such as <code>upright=''x''</code>. If ''x''=1 then the image is standard thumbnail width. ''E.g.'', <code><nowiki>[[File:Westminstpalace.jpg|thumbnail|upright|left|alt=A large clock tower and other buildings line a great river.|The "<code>upright</code>" option is about 75% of thumbnail width.]]</nowiki></code> (shown on the left) and <code><nowiki>[[File:Westminstpalace.jpg|thumb|upright=1.5|right|alt=A large clock tower and other buildings line a great river.|The "<code>upright=1.5</code>" option]]</nowiki></code> (shown on the right).
+{{clr}}
+
+; <code>frame</code> : [[File:Westminstpalace.jpg|frame|thumbnail|50px|alt=A large clock tower and other buildings line a great river.|The Palace of Westminster]] With this option, the embedded image is shown with its actual size enclosed by a frame, regardless of the "thumb" or "size" attribute, and the caption, if any, is visible in the frame. Without the options <code>left</code>, <code>center</code>, and <code>none</code>, the image is normally on the right: <code><nowiki>[[File:Westminstpalace.jpg|frame|thumbnail|50px|alt=A large clock tower and other buildings line a great river.|The Palace of Westminster]]</nowiki></code>.{{clr}}
+
+With none of the options other than <code>''size''px</code> and <code>''alternate (caption) text''</code>, an embedded image is rendered inline.
+
+<pre style="overflow:auto;">
+text text text text text text
+<nowiki>[[File:Westminstpalace.jpg|150px|alt=A large clock tower and other buildings line a great river.|The Palace of Westminster]]</nowiki>
+text text text text text
+<nowiki>[[File:tst.png|100px|alt=Tiny globe|This is a globe.]]</nowiki>
+text text text text
+</pre>
+
+gives
+
+text text text text text text
+[[File:Westminstpalace.jpg|150px|alt=A large clock tower and other buildings line a great river.|The Palace of Westminster]]
+text text text text text
+[[File:tst.png|100px|alt=Tiny globe|This is a globe.]]
+text text text text
+
+The option <code>none</code> can be used to have thumbnails without left- or right-alignment. This is probably most useful for [[Wikipedia:How to use tables|tables]]. This is an example:
+
+{| class="wikitable"
+!colspan=3| How to use <code>none</code>
+|-
+!colspan=3| London's palaces
+|-
+| Palace of Westminster || [[File:Westminstpalace.jpg|thumb|none|100px|alt=A large clock tower and other buildings line a great river.|From the Thames]] || <code><nowiki>[[File:Westminstpalace.jpg|thumb|none|100px|alt=A large clock tower and other buildings line a great river.|From the Thames]]</nowiki></code>
+|-
+| Buckingham Palace || [[File:Buckingham palace Copyright2003KaihsuTai.jpg|thumb|none|100px|alt=Grand city building below beautiful blue sky and clouds|Queen's home]] || <code><nowiki>[[File:Buckingham palace Copyright2003KaihsuTai.jpg|thumb|none|100px|alt=Grand city building below beautiful blue sky and clouds|Queen's home]]</nowiki></code>
+|}
+
+==Thumbnail with caption text underneath that has one or more links==
+
+From MediaWiki 1.3, it is also possible to include links in the caption text, ''e.g.'':
+
+: <code><nowiki>[[File:Westminstpalace.jpg|right|thumbnail|alt=A large clock tower and other buildings line a great river.|This is the [[Palace of Westminster]] in London]]</nowiki></code>
+
+[[File:Westminstpalace.jpg|right|thumbnail|alt=A large clock tower and other buildings line a great river.|This is the [[Palace of Westminster]] in London]]
+
+<br style="clear:both;"/>
+
+Just make sure the number of opening and closing square brackets are right. One extra or missing would mean the entire image syntax line would not work.
+
+==Additional caption formatting options==
+
+Additional caption formatting options are possible.
+
+: <code><nowiki>[[File:Westminstpalace.jpg|right|thumbnail|alt=A large clock tower and other buildings line a great river.|<div align="center">This is <span style="color: green">the </span><br /> [[Palace of Westminster]]<br /> '''in <span style="color: red">London</span>'''</div>]]
+</nowiki></code>
+
+[[File:Westminstpalace.jpg|right|thumbnail|alt=A large clock tower and other buildings line a great river.|<div align="center">This is <span style="color: green">the </span><br /> [[Palace of Westminster]]<br /> '''in <span style="color: red">London</span>'''</div>]]
+
+<br clear="right" />
+All of the normal text formatting options work.
+
+==Overlaying annotations on an image ==
+
+ {{Annotated image | float=right | caption=An example of a diagram with clickable links and overlaid text| image=Wiwaxia body zones.png | width=300 | height=110| image-width=150 | image-left=93 | image-top=0
+ | annotations =
+ {{Annotation|90|25|[[Spine]]}}
+ {{Annotation|150|40|Dorsal}}
+ {{Annotation|67|57|Upper lateral}}
+ {{Annotation|205|70|Lower lateral}}
+ {{Annotation|65|79|Ventro-lateral}}
+ {{Annotation|173|96|<span style{{=}}"background-color:#753a00">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> {{=}} Frontal}}
+ }}
+
+In some cases, it may be desirable to add clickable annotations to an image.  The template [[Template:Annotated image]] exists for this purpose.
+{{-}}
+
+== Compatibility considerations ==
+
+The floating options ''left'', ''center'', and ''right'' explained above are supported by modern browsers, but don't work with older browsers. If necessary it's simple to get a floating effect also for old browsers:
+
+{| align="right"
+| [[File:Westminstpalace.jpg|160px|alt=A large clock tower and other buildings line a great river.|Example]]
+|}
+
+<pre style="overflow:auto;">
+{| align="right"
+| [[File:Westminstpalace.jpg|160px|alt=A large clock tower and other buildings line a great river.|Example]]
+|}</pre>
+
+This code is not intended for general use, however. There are few, if any, instances where support for such legacy browsers is necessary.
+
+==Cancelling floating-around-image mode==<!-- This section is linked from [[George Fox]] -->
+
+After having had an image floating next to text, putting further text below it and again using the full width can be done with the following markup. This blocks an image from appearing next to the material following this markup, possibly due to [[aesthetics|aesthetic]] reasons or a change in topics.
+
+: <code><nowiki><br style="clear:both" /></nowiki></code>
+
+For legacy <code>align="right"</code> (etc.) floating this isn't good enough; legacy browsers would ignore inline CSS. To cancel floating under all conditions the following markup (valid XHTML 1.0 transitional) works:
+
+: <code><nowiki><br clear="all" /></nowiki></code>
+
+The same code can be issued by using template {{tl|clear}} or {{tl|Clr}} or {{tl|-}} in certain namespaces (<em>en</em>, <em>meta</em>).
+
+==Linking to the image description page==
+If you want to make a link to the description page for an image, use a leading colon before "File:" in an intra-wiki link, like this: <code><nowiki>[[:File:STS-32 crew.jpg|STS-32 crew]]</nowiki></code> which yields: [[:File:STS-32 crew.jpg|STS-32 crew]].
+
+==Images that link somewhere other than the image description page==
+{{see also|Wikipedia:Images linking to articles}}
+
+It is possible to make an image that links to a different page instead of to the image description page. This should be done conscious of the image's licensing terms and can be achieved by using the "<code>|[[WP:PIC#link|link]]=</code>" option. To disable the link altogether and have a [[Wikipedia:ALT#Purely decorative images|purely decorative image]], in the sense that the image is not shown to visually impaired readers, use "{{para|link}}{{para|alt}}", with no arguments for either parameter.
+
+==Multimedia syntax==
+
+The extended syntax, in addition to yet more syntax, can also be applied to sound and video files. In these examples, ''File:'', the namespace equivalent to ''Image:'', is used. Either namespace can be used.
+
+===Sound files (Ogg)===
+
+; ''File description icon'' : "<code>noicon</code>". Do not display the icon that links to the sound file description page.
+Normally, sound files in [[Ogg]] format are presented on Wikipedia pages using the [[:Template:Listen]] or its related templates. However, it is also possible to present an audio file without any template.
+{| class=wikitable
+!&nbsp;!!Code!!Output
+|-
+|1.||<tt><nowiki>[[File:Accordion chords-01.ogg]]</nowiki></tt>
+|[[File:Accordion chords-01.ogg]]
+|-
+|2.||<tt><nowiki>[[File:Accordion chords-01.ogg|noicon]]</nowiki></tt>
+|[[File:Accordion chords-01.ogg|noicon]]
+|-
+|3.||<tt><nowiki>[[File:Accordion chords-01.ogg|noicon|90px]]</nowiki></tt>
+|[[File:Accordion chords-01.ogg|noicon|90px]]
+|}
+
+Note that none of these examples provide links to [[Wikipedia:Media help]], and examples 2 and 3 provide no navigable links to the files themselves. Thus, whenever this method is used, the [[:Template:Inline audio]] must be shown on that page, and the presentation of the play buttons must be accompanied by clickable links to the sound file itself. Examples:
+
+{| class=wikitable
+!&nbsp;!!Code!!Output
+|-
+|1.||<tt><nowiki>[[File:Accordion chords-01.ogg|90px|noicon|left]] [[:File:Accordion chords-01.ogg|Accordion chords]]</nowiki></tt>
+|[[File:Accordion chords-01.ogg|90px|noicon|left]] [[:File:Accordion chords-01.ogg|Accordion chords]]
+|-
+|2.||<tt><nowiki>[[:File:Accordion chords-01.ogg|Accordion chords]] [[File:Accordion chords-01.ogg|90px|noicon|right]]</nowiki></tt>
+|[[:File:Accordion chords-01.ogg|Accordion chords]] [[File:Accordion chords-01.ogg|90px|noicon|right]]
+|-
+|3.||<tt><nowiki>[[:File:Accordion chords-01.ogg|Accordion chords]] [[File:Accordion chords-01.ogg|90px|noicon]]</nowiki></tt>
+|[[:File:Accordion chords-01.ogg|Accordion chords]] [[File:Accordion chords-01.ogg|90px|noicon]]
+|}
+Note that vertical alignment of the play button does not work, nor is it possible to present the play button inline with text; consequently, the most pleasing arrangement is achieved with examples 1 or 3.
+
+===Sound files (MIDI)===
+[[Media:K520.mid]]
+
+===Video files (Ogg)===
+
+To display a video as uploaded with a caption use <code><nowiki>[[File:First flights in aviation history.ogg|frame|none|alt=Alt text|Caption text]]</nowiki></code>.
+
+[[File:First flights in aviation history.ogg|frame|none|alt=Alt text|Caption text]]
+
+'''More syntax for videos'''
+; ''Initial still image'' : "<code>thumbtime='''Time'''</code>". Use the frame from the video at the given time as the initial still image. '''Time''' is either a number of seconds, or hours, minutes and seconds separated by colons. Without a thumbtime parameter, a frame from the midpoint of the video is used by default. For instance, using the same video file as previously:
+[[File:First flights in aviation history.ogg|right|thumb|thumbtime=21|Man in suit tie and hat at 21 seconds. Time syntax using seconds only: "21".]]
+[[File:First flights in aviation history.ogg|right|thumb|thumbtime=0:23|Monoplane seen at 23 seconds. Time syntax using minutes and seconds: "0:23".]]
+[[File:First flights in aviation history.ogg|right|thumb|thumbtime=0:0:33|Landed biplane seen at 33 seconds. Time syntax using hours, minutes and seconds: "0:0:33".]]
+{{-}}
+
+'''Displaying small videos larger'''
+
+To display a video larger than its uploaded size use "'''<code>|thumb</code>'''" and "'''<code>|''number''px</code>'''". This may be useful if the original video is very small but shows some important but small detail, but note that upscaling may create unexpected scaling artifacts. For example, the code
+
+<code><nowiki>[[File:cal16x16check_vdnocnoafr1len2.avi.q10.ogv|inline|left]] [[File:cal16x16check_vdnocnoafr1len2.avi.q10.ogv|right|thumb|128px]]</nowiki></code>
+
+displays the 16 pixels wide video at its original size on the left and eight times wider at the right (the squares should be all black or all white and the edges should be sharp — any blurriness or off-white colour is likely due to the browser or the Wikimedia server rendering):
+
+[[File:cal16x16check_vdnocnoafr1len2.avi.q10.ogv|inline|left]] [[File:cal16x16check_vdnocnoafr1len2.avi.q10.ogv|right|thumb|128px]]
+{{-}}
+
+'''Thumbtime in a gallery'''
+
+Until MediaWiki handles the ''thumbtime'' parameter inside a gallery (as of 2010-01-24 MediaWiki ignored the parameter inside [[Wikipedia:Gallery tag|&#60;gallery>]] tags or {{tl|Gallery}}), you need to manually write a gallery if you wish to use it. The following shows how MediaWiki handles thumbtime in galleries (please update this help when it changes):
+<gallery>
+File:First flights in aviation history.ogg|thumbtime=21|Man in suit tie and hat at 21 seconds.
+File:First flights in aviation history.ogg|thumbtime=0:23|Monoplane seen at 23 seconds.
+</gallery>
+
+Here is an example pseudo-gallery that obeys thumbtime followed by the wikicode that created it.
+
+{| class="wikitable"
+| [[File:First flights in aviation history.ogg|thumb|thumbtime=21|alt=Man in suit, tie and hat|Man in suit tie and hat at 21 seconds]]
+| [[File:Westminstpalace.jpg|thumb|none|alt=A large clock tower and other buildings line a great river.|From the Thames]]
+|-
+| [[File:Buckingham palace Copyright2003KaihsuTai.jpg|thumb|none|alt=grand city building below beautiful blue sky and clouds|Queen's home]]
+| [[File:First flights in aviation history.ogg|thumb|thumbtime=0:23|alt=Monoplane|Monoplane seen at 23 seconds]]
+|}
+
+{| style="border:solid;border-width:1px;border-color:grey"
+|<pre><nowiki>{| class="wikitable"
+| [[File:First flights in aviation history.ogg|thumb|thumbtime=21|alt=Man in suit, tie and hat|Man in suit tie and hat at 21 seconds]]
+| [[File:Westminstpalace.jpg|thumb|none|alt=A large clock tower and other buildings line a great river.|From the Thames]]
+|-
+| [[File:Buckingham palace Copyright2003KaihsuTai.jpg|thumb|none|alt=grand city building below beautiful blue sky and clouds|Queen's home]]
+| [[File:First flights in aviation history.ogg|thumb|thumbtime=0:23|alt=Monoplane|Monoplane seen at 23 seconds]]
+|}
+</nowiki></pre>
+|}
+
+==See also==
+* [[Wikipedia:Images]] for an overview of images in Wikipedia.
+* [[Wikipedia:Picture tutorial]].
+* [[Wikimedia Commons]] ([[:commons:Main Page|Commons Main Page]]), a free [[multimedia]] [[Digital library|repository]], that you can use directly in Wikipedia and the other [[Wikimedia Foundation|Wikimedia project]]s. You can [[uploading and downloading|upload]] new images or use the stored ones.
+* [[Commons:Commons:Video|Commons:Video]], outline of videos on Commons; using, playing, policy, finding, converting and uploading.
+* [[Wikipedia:Creation and usage of media files]], a how-to guide, old but still useful.
+* [[Wikipedia:Image use policy]].
+* [[Wikipedia:Finding images tutorial]].
+* [[meta:Help:Images and other uploaded files]].
