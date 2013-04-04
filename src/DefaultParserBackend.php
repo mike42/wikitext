@@ -186,6 +186,7 @@ class DefaultParserBackend {
 
 			if($info['namespace'] == 'file') {
 				/* Render an image instead of a link if requested */
+				$info['url'] = $info['target'];
 				$info['caption'] = '';
 				return $this -> render_file($info, $arg);
 			} else if(isset($this -> interwiki[$info['namespace']])) {
