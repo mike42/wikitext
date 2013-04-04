@@ -85,7 +85,8 @@ class WikitextParser {
 			'noinclude'      => new ParserInlineElement('<noinclude>', '</noinclude>'),
 			'includeonly'	 => new ParserInlineElement('<includeonly>' , '</includeonly>'),
 			'arg'		     => new ParserInlineElement('{{{' , '}}}', '|', '', 1),
-			'template'  	 => new ParserInlineElement('{{', 	'}}',  '|', '='));
+			'template'  	 => new ParserInlineElement('{{', 	'}}',  '|', '='),
+			'comment'		 => new ParserInlineElement('<!--', '-->'));
 	}
 
 	/**
