@@ -36,10 +36,10 @@ class LinksTemplates {
 		echo "<hr /><b>Markup for this page:</b><pre>".htmlentities($input)."</pre>";
 		echo "<b>After preprocessing:</b><pre>".htmlentities($parser -> preprocessed)."</pre>";
 	}
-	
+
 	/**
 	 * Get wikitext for a given page
-	 * 
+	 *
 	 * @param   string $pageName   Identifier for the page name
 	 * @return  boolean|string     Text of the page, or false if it could not be found
 	 */

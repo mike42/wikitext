@@ -1,28 +1,28 @@
 <?php
 /*
-  Library to add wikitext support to a web app -- http://mike.bitrevision.com/wikitext/
+ Library to add wikitext support to a web app -- http://mike.bitrevision.com/wikitext/
 
-  Copyright (C) 2012 Michael Billington <michael.billington@gmail.com>
+Copyright (C) 2012 Michael Billington <michael.billington@gmail.com>
 
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-  associated documentation files (the "Software"), to deal in the Software without restriction,
-  including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-  and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
-  subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
 
-  The above copyright notice and this permission notice shall be included in all copies or substantial
-  portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or substantial
+portions of the Software.
 
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-  PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-  HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-  CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 class WikitextParser {
 	const version = "0.5.3";
-	const MAX_INCLUDE_DEPTH = 32; /* Depth of template includes to put up with. set to 0 to disallow inclusion, negative to remove the limit */	
+	const MAX_INCLUDE_DEPTH = 32; /* Depth of template includes to put up with. set to 0 to disallow inclusion, negative to remove the limit */
 
 	private static $inline;
 	private static $lineBlock;
@@ -42,22 +42,22 @@ class WikitextParser {
 	public static function init($sharedVars = array()) {
 		/* Table elements. These are parsed separately to the other elements */
 		self::$tableStart =	new ParserInlineElement("{|",		"|}");
-		
+
 		self::$tableBlock = array(
-			'tr'      => new ParserTableElement('|-', '', '', ''),
-			'th'      => new ParserTableElement('!', '|', '!!', 1),
-			'td'      => new ParserTableElement('|', '|', '||', 1),
-			'caption' => new ParserTableElement('|+', '', '', 0));
+				'tr'      => new ParserTableElement('|-', '', '', ''),
+				'th'      => new ParserTableElement('!', '|', '!!', 1),
+				'td'      => new ParserTableElement('|', '|', '||', 1),
+				'caption' => new ParserTableElement('|+', '', '', 0));
 
 		/* Inline elemens. These are parsed recursively and can be nested as deeply as the system will allow. */
 		self::$inline = array(
-			'nothing'    => new ParserInlineElement('',    ''),
-			'td'		 => new ParserInlineElement('',    ''), // Just used as a marker
-			'a_internal' => new ParserInlineElement('[[',  ']]', 	'|', '='),
-			'a_external' => new ParserInlineElement('[',   ']', 	' ', '', 1),
-			'bold'       => new ParserInlineElement("'''", "'''"),
-			'italic'     => new ParserInlineElement("''",  "''"),
-			'switch'	 => new ParserInlineElement('__',  '__'));
+				'nothing'    => new ParserInlineElement('',    ''),
+				'td'		 => new ParserInlineElement('',    ''), // Just used as a marker
+				'a_internal' => new ParserInlineElement('[[',  ']]', 	'|', '='),
+				'a_external' => new ParserInlineElement('[',   ']', 	' ', '', 1),
+				'bold'       => new ParserInlineElement("'''", "'''"),
+				'italic'     => new ParserInlineElement("''",  "''"),
+				'switch'	 => new ParserInlineElement('__',  '__'));
 
 		/* Create lookup table for efficiency */
 		$inlineLookup = array();
@@ -75,18 +75,18 @@ class WikitextParser {
 
 		/* Line-block elements. These are characters which have a special meaning at the start of lines, and use the next end-line as a close tag. */
 		self::$lineBlock = array(
-			'pre' => new ParserLineBlockElement(array(" "),      array(),    1,     false),
-			'ul'  => new ParserLineBlockElement(array("*"),      array(),    0,     true),
-			'ol'  => new ParserLineBlockElement(array("#"),      array(),    0,     true),
-			'dl'  => new ParserLineBlockElement(array(":", ";"), array(),    0,     true),
-			'h'   => new ParserLineBlockElement(array("="),      array("="), 6,     false));
+				'pre' => new ParserLineBlockElement(array(" "),      array(),    1,     false),
+				'ul'  => new ParserLineBlockElement(array("*"),      array(),    0,     true),
+				'ol'  => new ParserLineBlockElement(array("#"),      array(),    0,     true),
+				'dl'  => new ParserLineBlockElement(array(":", ";"), array(),    0,     true),
+				'h'   => new ParserLineBlockElement(array("="),      array("="), 6,     false));
 
 		self::$preprocessor = array(
-			'noinclude'      => new ParserInlineElement('<noinclude>', '</noinclude>'),
-			'includeonly'	 => new ParserInlineElement('<includeonly>' , '</includeonly>'),
-			'arg'		     => new ParserInlineElement('{{{' , '}}}', '|', '', 1),
-			'template'  	 => new ParserInlineElement('{{', 	'}}',  '|', '='),
-			'comment'		 => new ParserInlineElement('<!--', '-->'));
+				'noinclude'      => new ParserInlineElement('<noinclude>', '</noinclude>'),
+				'includeonly'	 => new ParserInlineElement('<includeonly>' , '</includeonly>'),
+				'arg'		     => new ParserInlineElement('{{{' , '}}}', '|', '', 1),
+				'template'  	 => new ParserInlineElement('{{', 	'}}',  '|', '='),
+				'comment'		 => new ParserInlineElement('<!--', '-->'));
 	}
 
 	/**
@@ -99,20 +99,20 @@ class WikitextParser {
 		$parser = new WikitextParser($text);
 		return $parser -> result;
 	}
-	
+
 	/**
 	 * Initialise a new parser object and parse a standalone document.
 	 * If templates are included, each will processed by a different instance of this object
-	 * 
+	 *
 	 * @param string $text The text to parse
 	 */
 	public function WikitextParser($text, $params = array()) {
 		$this -> params = $params;
 		$this -> preprocessed = $this -> preprocess_text($text);
-		
+
 		/* Now divide into paragraphs */
 		$sections = explode("\n\n", str_replace("\r\n", "\n", $this -> preprocessed));
-		
+
 		$newtext = "";
 		foreach($sections as $section) {
 			/* Newlines at the start/end have special meaning (compare to how this is called from parseLineBlock) */
@@ -122,11 +122,11 @@ class WikitextParser {
 
 		$this -> result = $newtext;
 	}
-	
+
 	/**
 	 * Handle template arguments and other oddities. This section of the parser is single-pass and linear, with the exception of the part which substitutes templates
 	 * @param string $text wikitext to handle
-	 * @param mixed $arg Arguments (applies only to templates) 
+	 * @param mixed $arg Arguments (applies only to templates)
 	 * @param boolean $included true if the text is included, false otherwise
 	 * @return string
 	 */
@@ -136,23 +136,23 @@ class WikitextParser {
 		$len = mb_strlen($text);
 		for($i = 0; $i < $len; $i++) {
 			$hit = false;
-			
+				
 			foreach(self::$preprocessor as $key => $child) {
 				if(mb_strlen($child -> endTag) != 0 && $child -> endTag == mb_substr($text, $i, mb_strlen($child -> endTag))) {
 					if(($key == 'includeonly' && $included) || ($key == 'noinclude' && !$included)) {
 						$hit = true;
 						$i += mb_strlen($child -> endTag);
-						
+
 						/* Ignore expected end-tags */
 						break;
 					}
 				}
-				
+
 				if(mb_strlen($child -> startTag) != 0 && $child -> startTag == mb_substr($text, $i, mb_strlen($child -> startTag))) {
 					/* Hit a symbol. Parse it and keep going after the result */
 					$hit = true;
 					$i += mb_strlen($child -> startTag);
-					
+						
 					if(($key == 'includeonly' && $included) || ($key == 'noinclude' && !$included)) {
 						/* If this is a good tag, ignore it! */
 						break;
@@ -162,10 +162,10 @@ class WikitextParser {
 					$innerArg   = array();
 					$innerBuffer = '';
 					$innerCurKey = '';
-					
+						
 					for($i = $i; $i < $len; $i++) {
 						$innerHit = false;
-						
+
 						if(mb_strlen($child -> endTag) != 0 && $child -> endTag == mb_substr($text, $i, mb_strlen($child -> endTag))) {
 							$i += mb_strlen($child -> endTag);
 							/* Clear buffers now */
@@ -174,7 +174,7 @@ class WikitextParser {
 							} else {
 								$innerArg[$innerCurKey] = $innerBuffer;
 							}
-												
+
 							/* Figure out what to do with data */
 							$innerCurKey = array_shift($innerArg);
 							if ($key == 'arg') {
@@ -220,7 +220,7 @@ class WikitextParser {
 								$innerHit = true;
 							}
 						}
-	
+
 						if(!$innerHit) {
 							/* Append non-matching characters to buffer as we go */
 							$innerBuffer .= mb_substr($text, $i, 1);
@@ -239,11 +239,11 @@ class WikitextParser {
 		}
 		return $parsed;
 	}
-	
+
 	/**
 	 * Parse a block of wikitext looking for inline tokens, indicating the start of an element.
 	 * Calls itself recursively to search inside those elements when it finds them
-	 * 
+	 *
 	 * @param string $text Text to parse
 	 * @param $token The name of the current inline element, if inside one.
 	 */
@@ -260,25 +260,25 @@ class WikitextParser {
 		} else {
 			$inlineElement = self::$inline[$token];
 		}
-		
+
 		$parsed = ''; // For completely parsed text
 		$buffer = ''; // For text which may still be encapsulated or chopped up
 		$remainder = '';
-		
+
 		$arg = array();
 		$curKey = '';
-		
+
 		$len = mb_strlen($text);
 		for($i = 0; $i < $len; $i++) {
 			/* Looping through each character */
 			$hit = false; // State so that the last part knows whether to simply append this as an unmatched character
-			
+				
 			/* Looking for this element's close-token */
 			if(mb_strlen($inlineElement -> endTag) != 0 && $inlineElement -> endTag == mb_substr($text, $i, mb_strlen($inlineElement -> endTag))) {
 				/* Hit a close tag: Stop parsing here, return the remainder, and let the parent continue */
 				$start = $i + mb_strlen($inlineElement -> endTag);
 				$remainder = mb_substr($text, $start, $len - $start);
-				
+
 				if($inlineElement -> hasArgs) {
 					/* Handle arguments if needed */
 					if($curKey == '') {
@@ -288,12 +288,12 @@ class WikitextParser {
 					}
 					$buffer = self::$backend -> renderWithArgs($token, $arg);
 				}
-				
+
 				/* Clean up and quit */
 				$parsed .= $buffer; /* As far as I can tall $inPargraph should always be false here? */
 				return array('parsed' => $parsed, 'remainder' => $remainder);
 			}
-			
+				
 			/* Next priority is looking for this element's agument tokens if applicable */
 			if($inlineElement -> hasArgs && ($inlineElement -> argLimit == 0 || $inlineElement -> argLimit > count($arg))) {
 				if(mb_strlen($inlineElement -> argSep) != 0 && $inlineElement -> argSep == mb_substr($text, $i, mb_strlen($inlineElement -> argSep))) {
@@ -303,7 +303,7 @@ class WikitextParser {
 					} else {
 						$arg[$curKey] = $buffer;
 					}
-					
+						
 					$curKey = ''; // Reset key
 					$buffer = ''; // Reset parsed values
 					/* Handle position properly */
@@ -318,7 +318,7 @@ class WikitextParser {
 					$hit = true;
 				}
 			}
-				
+
 			/* Looking for new open-tokens */
 			$c = mb_substr($text, $i, 1);
 			if(isset(self::$inlineLookup[$c])) {
@@ -328,11 +328,11 @@ class WikitextParser {
 						/* Hit a symbol. Parse it and keep going after the result */
 						$start = $i + mb_strlen($child -> startTag);
 						$remainder = mb_substr($text, $start, $len - $start);
-						
+
 						/* Regular, recursively-parsed element */
 						$result = $this -> parseInline($remainder, $key);
 						$buffer .= self::$backend -> encapsulateElement($key, $result['parsed']);
-						
+
 						$text = $result['remainder'];
 						$len = mb_strlen($text);
 						$i = -1;
@@ -346,7 +346,7 @@ class WikitextParser {
 					if(self::$tableStart -> startTag == mb_substr($text, $i + 1, mb_strlen(self::$tableStart -> startTag))) {
 						$hit = true;
 						$start = $i + 1 + mb_strlen(self::$tableStart -> startTag);
-						$key = 'table';						
+						$key = 'table';
 					} else {
 						/* Check for non-table line-based stuff coming up next, each time \n is found */
 						$next = mb_substr($text, $i + 1, 1);
@@ -360,11 +360,11 @@ class WikitextParser {
 							}
 						}
 					}
-					
+						
 					if($hit) {
 						/* Go over what's been found */
 						$remainder = mb_substr($text, $start, $len - $start);
-						
+
 						if($key == 'table') {
 							$result = $this -> parseTable($remainder);
 						} else {
@@ -386,7 +386,7 @@ class WikitextParser {
 						$len = mb_strlen($text);
 						$i = -1;
 					}
-						
+
 					/* Other \n-related things if it wasn't as exciting as above */
 					if($buffer != '' && !$hit) {
 						/* Put in a space if it is not going to be the first thing added. */
@@ -397,14 +397,14 @@ class WikitextParser {
 					$buffer .= $c;
 				}
 			}
-			
+				
 			if($token == 'td') {
 				/* We only get here from table syntax if something else was being parsed, so we can quit here */
 				$parsed = $buffer;
 				return array('parsed' => $parsed, 'remainder' => $text);
-			}			
+			}
 		}
-		
+
 		/* Need to throw argument-driven items at the backend first here */
 		if($inlineElement -> hasArgs) {
 			if($curKey == '') {
@@ -414,20 +414,20 @@ class WikitextParser {
 			}
 			$buffer = self::$backend -> renderWithArgs($token, $arg);
 		}
-		
+
 		if($inParagraph && $buffer != '') {
 			/* Something before this was part of a paragraph */
 			$parsed .= self::$backend -> encapsulateElement('paragraph', $buffer);
 		} else {
 			$parsed .= $buffer;
 		}
-		
+
 		return array('parsed' => $parsed, 'remainder' => '');
 	}
-	
+
 	/**
 	 * Parse block of wikitext known to be starting with a line-based token
-	 * 
+	 *
 	 * @param $text Wikitext block to parse
 	 * @param $token name of the LineBlock token which we suspect
 	 */
@@ -443,7 +443,7 @@ class WikitextParser {
 			/* Loop through lines */
 			$count = 0;
 			$char = '';
-			
+				
 			$count = self::countChar($lineBlockElement -> startChar, $lines[0], $lineBlockElement -> limit);
 			if($count == 0) {
 				/* This line is not part of the element, or is not valid */
@@ -470,20 +470,20 @@ class WikitextParser {
 			$list = self::makeList($list);
 		}
 		$parsed = self::$backend -> renderLineBlock($token, $list);
-		
+
 		return array('parsed' => $parsed, 'remainder' => "\n". implode("\n", $lines));
 	}
-	
+
 	/**
 	 * Special handling for tables, uniquely containing both per-line and recursively parsed elements
-	 * 
+	 *
 	 * @param string $text Text to parse
 	 * @return multitype:string parsed and remaining text
 	 */
 	private function parseTable($text) {
 		$parsed = '';
 		$buffer = '';
-		
+
 		$lines = explode("\n", $text);
 		$table['properties'] = array_shift($lines); /* get style="..." */
 		$table['row'] = array();
@@ -507,7 +507,7 @@ class WikitextParser {
 			if($hit) {
 				/* Cut found token off start of line */
 				$line =	mb_substr($line, mb_strlen($block -> lineStart), mb_strlen($line) - mb_strlen($block -> lineStart));
-				
+
 				if($token == 'td' || $token == 'th') {
 					if(!isset($tmpRow)) {
 						/* Been given a cell before a row. Make a row first */
@@ -519,7 +519,7 @@ class WikitextParser {
 					$result = $this -> parseTableCells($token, implode("\n", $lines), $tmpRow['col']);
 					$lines = explode("\n", $result['remainder']);
 					$tmpRow['col'] = $result['col'];
-					
+						
 				} elseif($token == 'tr') {
 					if(isset($tmpRow)) {
 						/* Append existing row to table (if one exists) */
@@ -536,14 +536,14 @@ class WikitextParser {
 			/* Tack on the last row */
 			$table['row'][] = $tmpRow;
 		}
-		
+
 		$parsed = self::$backend -> render_table($table);
 		return array('parsed' => $parsed, 'remainder' => "\n". implode("\n", $lines));
 	}
 
 	/**
 	 * Retrieve columns started in this line of text
-	 * 
+	 *
 	 * @param string $token Type of cells we are looking at (th or td)
 	 * @param string $text Text to parse
 	 * @param string $colsSoFar Columns which have already been found in this row
@@ -552,8 +552,8 @@ class WikitextParser {
 	private function parseTableCells($token, $text, $colsSoFar) {
 		$tableElement = self::$tableBlock[$token];
 		$len = mb_strlen($text);
-		
-		$tmpCol = array('arg' => array(), 'content' => '', 'token' => $token);	
+
+		$tmpCol = array('arg' => array(), 'content' => '', 'token' => $token);
 		$argCount = 0;
 		$buffer = '';
 
@@ -587,7 +587,7 @@ class WikitextParser {
 					}
 				}
 			}
-			
+				
 			if($hit) {
 				/* Parse whatever it is and return here */
 				$start = $i;
@@ -599,20 +599,20 @@ class WikitextParser {
 				$i = -1;
 
 			}
-			
+				
 			if(!$hit && $tableElement -> inlinesep == mb_substr($text, $i, mb_strlen($tableElement -> inlinesep))) {
 				/* Got column separator, so this column is now finished */
 				$tmpCol['content'] = $buffer;
 				$colsSoFar[] = $tmpCol;
-				
+
 				/* Reset for the next */
 				$tmpCol = array('arg' => array(), 'content' => '', 'token' => $token);
 				$buffer = '';
 				$hit = true;
-				$i += mb_strlen($tableElement -> inlinesep) - 1;		
+				$i += mb_strlen($tableElement -> inlinesep) - 1;
 				$argCount = 0;
 			}
-			
+				
 			if(!$hit && $argCount < ($tableElement -> limit) && $tableElement -> argsep == mb_substr($text, $i, mb_strlen($tableElement -> argsep))) {
 				/* Got argument separator. Shift off the last argument */
 				$tmpCol['arg'][] = $buffer;
@@ -621,7 +621,7 @@ class WikitextParser {
 				$i += mb_strlen($tableElement -> argsep) - 1;
 				$argCount++;
 			}
-			
+				
 			if(!$hit) {
 				$c = mb_substr($text, $i, 1);
 				if($c == "\n") {
@@ -636,19 +636,19 @@ class WikitextParser {
 				$buffer .= $c;
 			}
 		}
-		
+
 		/* Put remaining buffers in the right place */
 		$tmpCol['content'] = $buffer;
 		$colsSoFar[] = $tmpCol;
 		$start = $i + 1;
 		$remainder = mb_substr($text, $start, $len - $start);
-		
+
 		return array('col' => $colsSoFar, 'remainder' => $remainder);
 	}
-	
+
 	/**
 	 * Count the number of times a character occurs at the start of a string
-	 * 
+	 *
 	 * @param string $char character to check
 	 * @param string $text String to search
 	 * @return number The number of times this character repeats at the start of the string
@@ -661,7 +661,7 @@ class WikitextParser {
 			foreach($chars as $char) {
 				$match = $match || ($char == $c);
 			}
-			
+				
 			if(!$match) {
 				return $i;
 			}
@@ -675,7 +675,7 @@ class WikitextParser {
 		/* Otherwise looks like the entire string is just this character repeated.. */
 		return mb_strlen($text);
 	}
-	
+
 	/**
 	 * Create a list from what we found in parseLineBlock(), returning all elements.
 	 */
@@ -683,14 +683,14 @@ class WikitextParser {
 		$list = self::findChildren($lines, 0, -1);
 		return $list['child'];
 	}
-	
+
 	/**
 	 * Recursively nests list elements inside eachother, forming a hierachy to traverse when rendering
 	 */
 	private static function findChildren($lines, $depth, $minKey) {
 		$children	= array();
 		$not		= array();
-		
+
 		foreach($lines as $key => $line) {
 			/* Loop through for candidates */
 			if($key > $minKey) {
@@ -702,19 +702,19 @@ class WikitextParser {
 				}
 			}
 		}
-		
+
 		/* For each child, list its children */
 		foreach($children as $key => $child) {
 			if(isset($children[$key])) {
 				$result = self::findChildren($children, $child['depth'], $key);
 				$children[$key]['child'] = $result['child'];
-				
+
 				/* We know that all of this list's children are NOT children of this item (directly), so remove them from our records. */
 				foreach($result['child'] as $notkey => $notchild) {
 					unset($children[$notkey]);
 					$not[$notkey] = true;
 				}
-				
+
 				/* And same for non-direct children reported above */
 				foreach($result['not'] as $notkey => $foo) {
 					unset($children[$notkey]);
@@ -750,7 +750,7 @@ class ParserLineBlockElement {
 	public $endChar;	/* End character */
 	public $limit;		/* Max depth of the element */
 	public $nestTags;	/* True if the tags for this element need to made hierachical for nesting */
-	
+
 	function ParserLineBlockElement($startChar, $endChar, $limit = 0, $nestTags = true) {
 		$this -> startChar = $startChar;
 		$this -> endChar = $endChar;
@@ -764,7 +764,7 @@ class ParserTableElement {
 	public $argsep;
 	public $limit;
 	public $inlinesep;
-	
+
 	function ParserTableElement($lineStart, $argsep, $inlinesep, $limit) {
 		$this -> lineStart = $lineStart;
 		$this -> argsep = $argsep;

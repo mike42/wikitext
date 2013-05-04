@@ -9,13 +9,13 @@ class DefaultParserBackend {
 
 	/**
 	 * Process an element which has arguments. Links, lists and templates fall under this category
-	 * 
+	 *
 	 * @param string $elementName
 	 * @param string $arg
 	 */
 	public function renderWithArgs($elementName, $arg) {
 		$fn = 'self::render_'.$elementName;
-		
+
 		if(is_callable($fn)) {
 			/* If a function is defined to handle this, use it */
 			return call_user_func_array($fn, array($arg));
@@ -23,17 +23,17 @@ class DefaultParserBackend {
 			return $arg[0];
 		}
 	}
-	
+
 	/**
 	 * Encapsulate inline elements
-	 * 
+	 *
 	 * @param string $text parsed text contained within this element
 	 * @param string $elementName the name of the element
 	 * @return string Correct markup for this element
 	 */
 	public function encapsulateElement($elementName, $text) {
 		$fn = 'self::encapsulate_'.$elementName;
-		
+
 		if(is_callable($fn)) {
 			/* If a function is defined to encapsulate this, use it */
 			return call_user_func_array($fn, array($text));
@@ -41,10 +41,10 @@ class DefaultParserBackend {
 			return $text;
 		}
 	}
-	
+
 	public function renderLineBlock($elementName, $list) {
 		$fn = 'self::render_'.$elementName;
-		
+
 		if(is_callable($fn)) {
 			/* If a function is defined to encapsulate this, use it */
 			return call_user_func_array($fn, array($elementName, $list));
@@ -52,19 +52,19 @@ class DefaultParserBackend {
 			return $elementName;
 		}
 	}
-	
+
 	public function render_ol($token, $list) {
 		return $this -> render_list($token, $list);
 	}
-	
+
 	public function render_ul($token, $list) {
 		return $this -> render_list($token, $list);
 	}
-	
+
 	public function render_dl($token, $list) {
 		return $this -> render_list($token, $list);
 	}
-	
+
 	public function render_h($token, $headings) {
 		$outp = "";
 		foreach($headings as $heading) {
@@ -73,19 +73,19 @@ class DefaultParserBackend {
 		}
 		return $outp;
 	}
-	
+
 	public function render_pre($token, $lines) {
 		$outpline = array();
 		foreach($lines as $line) {
 			$outpline[] = $line['item'];
 		}
-		
+
 		return "<pre>".implode("\n", $outpline)."</pre>";
 	}
-	
+
 	/**
 	 * Render list and any sub-lists recursively
-	 * 
+	 *
 	 * @param string $token The type of list (expect ul, ol, dl)
 	 * @param mixed $list The hierachy representing this list
 	 * @return string HTML markup for the list
@@ -94,7 +94,7 @@ class DefaultParserBackend {
 		$outp = '';
 		$subtoken = "li";
 		$outp .= "<$token>\n";
-		
+
 		foreach($list as $item) {
 			if($token == 'dl') {
 				$subtoken = $item['char'] == ";"? "dt": "dd";
@@ -116,7 +116,7 @@ class DefaultParserBackend {
 				$outp .= str_repeat("</$subtoken></$token>", $diff);
 			}
 			$outp .= "</$subtoken>\n";
-										
+
 		}
 		$outp .= "</$token>\n";
 		return $outp;
@@ -124,7 +124,7 @@ class DefaultParserBackend {
 
 	/**
 	 * Default rendering of [[link]] or [[link|foo]]
-	 * 
+	 *
 	 * @param string $destination page name we are linking to
 	 * @param string $caption Caption of this link (can inlude parsed wikitext)
 	 * @return string HTML markup for the link
@@ -137,7 +137,7 @@ class DefaultParserBackend {
 		if(isset($arg[1])) {
 			$caption = $arg[1];
 		}
-	
+
 		/* Compensate for missing values */
 		if(isset($destination) && !isset($caption)) {
 			$caption = $destination; // Fill in caption = destination as default
@@ -151,13 +151,13 @@ class DefaultParserBackend {
 		}
 
 		$info = array(	'url' => $destination, /* You should override getInternalLinkInfo() to set this better according to your application. */
-						'title' => $destination, /* Eg [[foo:bar]] links to "foo:bar". */
-						'namespace' => '', /* Eg [[foo:bar]] is in namespace 'foo' */
-						'target' => $destination, /* Eg [[foo:bar]] has the target "bar" within the namespace. */
-						'namespaceignore' => false, /* eg [[:File:foo.png]], link to the image don't include it */
-						'caption' => $caption, /* The link caption eg [[foo:bar|baz]] has the caption 'baz' */
-						'exists' => true, /* Causes class="new" for making red-links */
-						'external' => false);
+				'title' => $destination, /* Eg [[foo:bar]] links to "foo:bar". */
+				'namespace' => '', /* Eg [[foo:bar]] is in namespace 'foo' */
+				'target' => $destination, /* Eg [[foo:bar]] has the target "bar" within the namespace. */
+				'namespaceignore' => false, /* eg [[:File:foo.png]], link to the image don't include it */
+				'caption' => $caption, /* The link caption eg [[foo:bar|baz]] has the caption 'baz' */
+				'exists' => true, /* Causes class="new" for making red-links */
+				'external' => false);
 
 		/* Attempt to deduce namespaces */
 		if($destination == '') {
@@ -217,89 +217,89 @@ class DefaultParserBackend {
 		}
 
 		switch($ext) {
-		case 'jpg':
-		case 'jpeg':
-		case 'png':
-		case 'gif':
-			/* Image flags parsed. From: http://www.mediawiki.org/wiki/Help:Images */
+			case 'jpg':
+			case 'jpeg':
+			case 'png':
+			case 'gif':
+				/* Image flags parsed. From: http://www.mediawiki.org/wiki/Help:Images */
 
-			/* Named arguments */
-			if(isset($arg['link'])) { // |link=
-				$info['url'] = $arg['link'];
-				$info['link'] = $arg['link'];
-				unset($arg['link']);
-			}
-			if(isset($arg['class'])) { // |class=
-				$info['class'] = $arg['class'];
-				unset($arg['class']);
-			}
-			if(isset($arg['alt'])) { // |alt=
-				$info['title'] = $arg['alt'];
-				unset($arg['alt']);
-			}
-			if(isset($arg['page'])) { // |alt=
-				$info['page'] = $arg['page'];
-				unset($arg['page']);
-			}
+				/* Named arguments */
+				if(isset($arg['link'])) { // |link=
+					$info['url'] = $arg['link'];
+					$info['link'] = $arg['link'];
+					unset($arg['link']);
+				}
+				if(isset($arg['class'])) { // |class=
+					$info['class'] = $arg['class'];
+					unset($arg['class']);
+				}
+				if(isset($arg['alt'])) { // |alt=
+					$info['title'] = $arg['alt'];
+					unset($arg['alt']);
+				}
+				if(isset($arg['page'])) { // |alt=
+					$info['page'] = $arg['page'];
+					unset($arg['page']);
+				}
 
-			foreach($arg as $key => $item) {
-				/* Figure out unnamed arguments */
-				if(is_numeric($key)) { /* Any unsupported named arguments will be ignored */
-					if(substr($item, 0, -2) == 'px') {
-						/* Size */
-						// TODO
-					} else {
-						/* Load recognised switches */
-						switch($item) {
-							case "frameless": $info['frameless'] = true; break;
-							case "border": $info['border'] = true; break;
-							case "frame": $info['frame'] = true; break;
-							case "thumb": $info['thumbnail'] = true; break;
-							case "thumbnail": $info['thumbnail'] = true; break;
-							case "left": $info['left'] = true; break;
-							case "right": $info['right'] = true; break;
-							case "center": $info['center'] = true; break;
-							case "none": $info['none'] = true; break;
-							default:
-								$info['caption'] = $item;
+				foreach($arg as $key => $item) {
+					/* Figure out unnamed arguments */
+					if(is_numeric($key)) { /* Any unsupported named arguments will be ignored */
+						if(substr($item, 0, -2) == 'px') {
+							/* Size */
+							// TODO
+						} else {
+							/* Load recognised switches */
+							switch($item) {
+								case "frameless": $info['frameless'] = true; break;
+								case "border": $info['border'] = true; break;
+								case "frame": $info['frame'] = true; break;
+								case "thumb": $info['thumbnail'] = true; break;
+								case "thumbnail": $info['thumbnail'] = true; break;
+								case "left": $info['left'] = true; break;
+								case "right": $info['right'] = true; break;
+								case "center": $info['center'] = true; break;
+								case "none": $info['none'] = true; break;
+								default:
+									$info['caption'] = $item;
+							}
 						}
 					}
 				}
-			}
 
-			$info = $this -> getImageInfo($info);
+				$info = $this -> getImageInfo($info);
 
-			if($info['namespaceignore'] || !$info['exists']) {
-				/* Only link to the image, do not display it */
-				if($info['caption'] == '') {
-					$info['caption'] = $info['target'];
-				}
-				/* Construct link */
-				return "<a href=\"".htmlspecialchars($info['url'])."\" title=\"".htmlspecialchars($info['title'])."\"".(!$info['exists']? " class=\"new\"": '').">".$info['caption']."</a>";
-			} else {
-				$dend = $dstart = "";
-				if(isset($info['thumbnail']) || isset($info['frame'])) {
-					if(isset($info['right'])) {
-						$align = " tright";
-					} elseif(isset($info['left'])) {
-						$align = " tleft";
-					} else {
-						$align = "";
+				if($info['namespaceignore'] || !$info['exists']) {
+					/* Only link to the image, do not display it */
+					if($info['caption'] == '') {
+						$info['caption'] = $info['target'];
 					}
-					$dstart = "<div class=\"thumb$align\">";
-					if($info['caption'] != '') {
-						$dend .= "<div class=\"thumbcaption\">" . htmlspecialchars($info['caption']) .  "</div>";
+					/* Construct link */
+					return "<a href=\"".htmlspecialchars($info['url'])."\" title=\"".htmlspecialchars($info['title'])."\"".(!$info['exists']? " class=\"new\"": '').">".$info['caption']."</a>";
+				} else {
+					$dend = $dstart = "";
+					if(isset($info['thumbnail']) || isset($info['frame'])) {
+						if(isset($info['right'])) {
+							$align = " tright";
+						} elseif(isset($info['left'])) {
+							$align = " tleft";
+						} else {
+							$align = "";
+						}
+						$dstart = "<div class=\"thumb$align\">";
+						if($info['caption'] != '') {
+							$dend .= "<div class=\"thumbcaption\">" . htmlspecialchars($info['caption']) .  "</div>";
+						}
+						$dend .= "</div>";
 					}
-					$dend .= "</div>";
+					/* Construct link */
+					return "$dstart<a href=\"".htmlspecialchars($info['url'])."\"><img src=\"".htmlspecialchars($info['thumb'])."\" alt=\"".htmlspecialchars($info['title']). "\" /></a>$dend";
 				}
-				/* Construct link */
-				return "$dstart<a href=\"".htmlspecialchars($info['url'])."\"><img src=\"".htmlspecialchars($info['thumb'])."\" alt=\"".htmlspecialchars($info['title']). "\" /></a>$dend";
-			}
-			
-			break;
-		default:
-			/* Something unsupported */
-			return "<b>(unsupported media file)</b>";
+					
+				break;
+			default:
+				/* Something unsupported */
+				return "<b>(unsupported media file)</b>";
 		}
 	}
 
@@ -357,14 +357,14 @@ class DefaultParserBackend {
 
 	/**
 	 * Default encapsulation for '''bold'''
-	 * 
+	 *
 	 * @param string $text Text to make bold
 	 * @return string
 	 */
 	public function encapsulate_bold($text) {
 		return "<b>".$text."</b>";
 	}
-	
+
 	/**
 	 * Default encapsulation for ''italic''
 	 *
@@ -374,11 +374,11 @@ class DefaultParserBackend {
 	public function encapsulate_italic($text) {
 		return "<i>".$text."</i>";
 	}
-	
+
 	public function encapsulate_paragraph($text) {
 		return "<p>".$text."</p>\n";
 	}
-	
+
 	/**
 	 * Generate HTML for a table
 	 */
@@ -388,14 +388,14 @@ class DefaultParserBackend {
 		} else {
 			$outp = "<table ".trim($table['properties']).">\n";
 		}
-		
+
 		foreach($table['row'] as $row) {
 			$outp .= $this -> render_row($row);
 		}
-		
+
 		return $outp."</table>\n";
 	}
-	
+
 	/**
 	 * Render a single row of a table
 	 */
@@ -416,13 +416,13 @@ class DefaultParserBackend {
 			}
 			$outp .= $col['content']."</". $col['token']. ">\n";
 		}
-		
+
 		return $outp . "</tr>\n";
 	}
 
 	/**
 	 * Function to over-ride if you want to provide a mechanism for getting templates
-	 * 
+	 *
 	 * @param string $template
 	 */
 	public function getTemplateMarkup($template) {
