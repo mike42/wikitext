@@ -221,9 +221,12 @@ class DefaultParserBackend {
 		case 'jpeg':
 		case 'png':
 		case 'gif':
+			/* Image flags parsed. From: http://www.mediawiki.org/wiki/Help:Images */
+
 			/* Named arguments */
 			if(isset($arg['link'])) { // |link=
 				$info['url'] = $arg['link'];
+				$info['link'] = $arg['link'];
 				unset($arg['link']);
 			}
 			if(isset($arg['class'])) { // |class=
@@ -242,10 +245,24 @@ class DefaultParserBackend {
 			foreach($arg as $key => $item) {
 				/* Figure out unnamed arguments */
 				if(is_numeric($key)) { /* Any unsupported named arguments will be ignored */
-					switch($arg) {
-						/* TODO: Spot all flags, see: http://www.mediawiki.org/wiki/Help:Images */
-						default:
-							$caption = $arg;
+					if(substr($item, 0, -2) == 'px') {
+						/* Size */
+						// TODO
+					} else {
+						/* Load recognised switches */
+						switch($item) {
+							case "frameless": $info['frameless'] = true; break;
+							case "border": $info['border'] = true; break;
+							case "frame": $info['frame'] = true; break;
+							case "thumb": $info['thumbnail'] = true; break;
+							case "thumbnail": $info['thumbnail'] = true; break;
+							case "left": $info['left'] = true; break;
+							case "right": $info['right'] = true; break;
+							case "center": $info['center'] = true; break;
+							case "none": $info['none'] = true; break;
+							default:
+								$info['caption'] = $item;
+						}
 					}
 				}
 			}
@@ -257,11 +274,26 @@ class DefaultParserBackend {
 				if($info['caption'] == '') {
 					$info['caption'] = $info['target'];
 				}
+				/* Construct link */
 				return "<a href=\"".htmlspecialchars($info['url'])."\" title=\"".htmlspecialchars($info['title'])."\"".(!$info['exists']? " class=\"new\"": '').">".$info['caption']."</a>";
 			} else {
-				//print_r($info);
-				// TODO: Add support for all the flags once they're detected above */
-				return "<a href=\"".htmlspecialchars($info['url'])."\"><img src=\"".htmlspecialchars($info['thumb'])."\" alt=\"".htmlspecialchars($info['title']). "\" /></a>";
+				$dend = $dstart = "";
+				if(isset($info['thumbnail']) || isset($info['frame'])) {
+					if(isset($info['right'])) {
+						$align = " tright";
+					} elseif(isset($info['left'])) {
+						$align = " tleft";
+					} else {
+						$align = "";
+					}
+					$dstart = "<div class=\"thumb$align\">";
+					if($info['caption'] != '') {
+						$dend .= "<div class=\"thumbcaption\">" . htmlspecialchars($info['caption']) .  "</div>";
+					}
+					$dend .= "</div>";
+				}
+				/* Construct link */
+				return "$dstart<a href=\"".htmlspecialchars($info['url'])."\"><img src=\"".htmlspecialchars($info['thumb'])."\" alt=\"".htmlspecialchars($info['title']). "\" /></a>$dend";
 			}
 			
 			break;
