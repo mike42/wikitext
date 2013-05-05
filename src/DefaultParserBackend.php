@@ -32,7 +32,7 @@ class DefaultParserBackend {
 	 * @return string Correct markup for this element
 	 */
 	public function encapsulateElement($elementName, $text) {
-		$fn = 'self::encapsulate_'.$elementName;
+		$fn = array($this, 'encapsulate_'.$elementName);
 
 		if(is_callable($fn)) {
 			/* If a function is defined to encapsulate this, use it */
@@ -43,7 +43,7 @@ class DefaultParserBackend {
 	}
 
 	public function renderLineBlock($elementName, $list) {
-		$fn = 'self::render_'.$elementName;
+		$fn = array($this, 'render_'.$elementName);
 
 		if(is_callable($fn)) {
 			/* If a function is defined to encapsulate this, use it */
