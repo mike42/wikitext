@@ -14,7 +14,7 @@ class DefaultParserBackend {
 	 * @param string $arg
 	 */
 	public function renderWithArgs($elementName, $arg) {
-		$fn = 'self::render_'.$elementName;
+		$fn = array($this, 'render_'.$elementName);
 
 		if(is_callable($fn)) {
 			/* If a function is defined to handle this, use it */
