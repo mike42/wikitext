@@ -23,7 +23,7 @@ div.floatright,table.floatright,div.floatleft,table.floatleft {
 </head>
 <body>
 
-	<?
+	<?php
 	# Version of SimpleTest to open in a web-browser
 	require_once("../../wikitext.php");
 	$input = file_get_contents("input.txt");

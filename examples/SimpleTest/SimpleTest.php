@@ -1,5 +1,5 @@
 #!/usr/bin/php
-<?
+<?php
 require_once("../../wikitext.php");
 $input = file_get_contents("input.txt");
 
