@@ -6,5 +6,3 @@ $input = file_get_contents("input.txt");
 WikitextParser::init();
 $parser = new WikitextParser($input);
 echo $parser -> result;
-
-?>

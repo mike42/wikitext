@@ -1,5 +1,4 @@
-Wikitext parser
----------------
+# Wikitext parser [![Build Status](https://travis-ci.org/mike42/wikitext.svg?branch=master)](https://travis-ci.org/mike42/wikitext)
 
 This library can be used to add basic wikitext (Mediawiki-style) support to a PHP app.
 

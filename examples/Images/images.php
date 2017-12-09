@@ -24,14 +24,14 @@ div.floatright,table.floatright,div.floatleft,table.floatleft {
 <body>
 
 	<?php
-	# Version of SimpleTest to open in a web-browser
-	require_once("../../wikitext.php");
-	$input = file_get_contents("input.txt");
+    # Version of SimpleTest to open in a web-browser
+    require_once("../../wikitext.php");
+    $input = file_get_contents("input.txt");
 
-	WikitextParser::init();
-	$parser = new WikitextParser($input);
-	echo $parser -> result;
+    WikitextParser::init();
+    $parser = new WikitextParser($input);
+    echo $parser -> result;
 
-	?>
+    ?>
 </body>
 </html>
