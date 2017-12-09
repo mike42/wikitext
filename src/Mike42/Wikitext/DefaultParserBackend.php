@@ -4,6 +4,8 @@
  * and are expected to provide supporting functions like template substitutions,
  * link destinations, and other installation-specific oddities
  */
+namespace Mike42\Wikitext;
+
 class DefaultParserBackend
 {
     private $interwiki;
