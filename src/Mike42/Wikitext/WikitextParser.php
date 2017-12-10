@@ -34,6 +34,7 @@ class WikitextParser
     private static $tableStart;
     private static $inlineLookup;
     private static $preprocessor;
+    private static $initialised = false;
 
     /* These are set as a result of parsing */
     public $preprocessed; /* Wikitext after preprocessor had a go at it. */
@@ -91,6 +92,8 @@ class WikitextParser
                 'arg'            => new ParserInlineElement('{{{', '}}}', '|', '', 1),
                 'template'       => new ParserInlineElement('{{', '}}', '|', '='),
                 'comment'        => new ParserInlineElement('<!--', '-->'));
+        
+        self::$initialised = true;
     }
 
     /**
@@ -99,7 +102,7 @@ class WikitextParser
      * @param unknown_type $text
      * @param unknown_type $included
      */
-    public function parse($text)
+    public static function parse($text)
     {
         $parser = new WikitextParser($text);
         return $parser -> result;
@@ -111,8 +114,11 @@ class WikitextParser
      *
      * @param string $text The text to parse
      */
-    public function WikitextParser($text, $params = array())
+    public function __construct($text, $params = array())
     {
+        if(self::$initialised == false) {
+            self::init();
+        }
         $this -> params = $params;
         $this -> preprocessed = $this -> preprocess_text($text);
 
@@ -748,7 +754,7 @@ class ParserInlineElement
     public $argSep, $argNameSep;
     public $hasArgs;
 
-    function ParserInlineElement($startTag, $endTag, $argSep = '', $argNameSep = '', $argLimit = 0)
+    function __construct($startTag, $endTag, $argSep = '', $argNameSep = '', $argLimit = 0)
     {
         $this -> startTag = $startTag;
         $this -> endTag = $endTag;
@@ -766,7 +772,7 @@ class ParserLineBlockElement
     public $limit;      /* Max depth of the element */
     public $nestTags;   /* True if the tags for this element need to made hierachical for nesting */
 
-    function ParserLineBlockElement($startChar, $endChar, $limit = 0, $nestTags = true)
+    function __construct($startChar, $endChar, $limit = 0, $nestTags = true)
     {
         $this -> startChar = $startChar;
         $this -> endChar = $endChar;
@@ -782,7 +788,7 @@ class ParserTableElement
     public $limit;
     public $inlinesep;
 
-    function ParserTableElement($lineStart, $argsep, $inlinesep, $limit)
+    function __construct($lineStart, $argsep, $inlinesep, $limit)
     {
         $this -> lineStart = $lineStart;
         $this -> argsep = $argsep;
