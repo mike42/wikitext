@@ -1,5 +1,5 @@
 <?php
-use Mike42\Wikitext\WikitextParser;
+namespace Mike42\Wikitext;
 
 class WikitextParserTest extends \PHPUnit\Framework\TestCase
 {
@@ -10,5 +10,3 @@ class WikitextParserTest extends \PHPUnit\Framework\TestCase
         $this -> assertEquals($expected, $actual);
     }
 }
-
-?>

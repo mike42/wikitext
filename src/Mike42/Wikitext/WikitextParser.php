@@ -24,7 +24,7 @@ namespace Mike42\Wikitext;
 
 class WikitextParser
 {
-    const version = "0.5.3";
+    const VERSION = "1.0";
     const MAX_INCLUDE_DEPTH = 32; /* Depth of template includes to put up with. set to 0 to disallow inclusion, negative to remove the limit */
 
     private static $inline;
@@ -116,7 +116,7 @@ class WikitextParser
      */
     public function __construct($text, $params = array())
     {
-        if(self::$initialised == false) {
+        if (self::$initialised == false) {
             self::init();
         }
         $this -> params = $params;
@@ -142,7 +142,7 @@ class WikitextParser
      * @param boolean $included true if the text is included, false otherwise
      * @return string
      */
-    function preprocess_text($text, $arg = array(), $included = false, $depth = 0)
+    private function preprocess_text($text, $arg = array(), $included = false, $depth = 0)
     {
         $parsed = '';
 
@@ -742,57 +742,5 @@ class WikitextParser
         }
 
         return array('child' => $children, 'not' => $not);
-    }
-}
-
-/**
- * Stores inline elements
- */
-class ParserInlineElement
-{
-    public $startTag, $endTag;
-    public $argSep, $argNameSep;
-    public $hasArgs;
-
-    function __construct($startTag, $endTag, $argSep = '', $argNameSep = '', $argLimit = 0)
-    {
-        $this -> startTag = $startTag;
-        $this -> endTag = $endTag;
-        $this -> argSep = $argSep;
-        $this -> argNameSep = $argNameSep;
-        $this -> argLimit = $argLimit;
-        $this -> hasArgs = $this -> argSep != '';
-    }
-}
-
-class ParserLineBlockElement
-{
-    public $startChar;  /* Characters which can loop to start this element */
-    public $endChar;    /* End character */
-    public $limit;      /* Max depth of the element */
-    public $nestTags;   /* True if the tags for this element need to made hierachical for nesting */
-
-    function __construct($startChar, $endChar, $limit = 0, $nestTags = true)
-    {
-        $this -> startChar = $startChar;
-        $this -> endChar = $endChar;
-        $this -> limit = $limit;
-        $this -> nestTags = $nestTags;
-    }
-}
-
-class ParserTableElement
-{
-    public $lineStart;  /* Token appearing at start of line */
-    public $argsep;
-    public $limit;
-    public $inlinesep;
-
-    function __construct($lineStart, $argsep, $inlinesep, $limit)
-    {
-        $this -> lineStart = $lineStart;
-        $this -> argsep = $argsep;
-        $this -> inlinesep = $inlinesep;
-        $this -> limit = $limit;
     }
 }

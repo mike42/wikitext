@@ -1,3 +1,7 @@
+<?php
+require_once(__DIR__ . "/../../vendor/autoload.php");
+use Mike42\Wikitext\WikitextParser;
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,28 +11,26 @@
 
 /* @noflip */
 div.tright,div.floatright,table.floatright {
-	clear: right;
-	float: right;
+    clear: right;
+    float: right;
 }
 /* @noflip */
 div.tleft,div.floatleft,table.floatleft {
-	float: left;
-	clear: left;
+    float: left;
+    clear: left;
 }
 
 div.floatright,table.floatright,div.floatleft,table.floatleft {
-	position: relative;
+    position: relative;
 }
 </style>
 </head>
 <body>
 
-	<?php
+    <?php
     # Version of SimpleTest to open in a web-browser
-    require_once("../../wikitext.php");
     $input = file_get_contents("input.txt");
 
-    WikitextParser::init();
     $parser = new WikitextParser($input);
     echo $parser -> result;
 
