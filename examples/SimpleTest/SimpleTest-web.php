@@ -1,8 +1,9 @@
 <?php
 # Version of SimpleTest to open in a web-browser
-require_once("../../wikitext.php");
+require_once(__DIR__ . "/../../vendor/autoload.php");
+use Mike42\Wikitext\WikitextParser;
+
 $input = file_get_contents("input.txt");
 
-WikitextParser::init();
 $parser = new WikitextParser($input);
 echo $parser -> result;

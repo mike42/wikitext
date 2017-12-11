@@ -1,5 +1,7 @@
 <?php
-require_once("../../wikitext.php");
+require_once(__DIR__ . "/../../vendor/autoload.php");
+use Mike42\Wikitext\DefaultParserBackend;
+use Mike42\Wikitext\WikitextParser;
 
 /**
  * The custom behaviour of templates and links needs to be defined here:
@@ -34,7 +36,6 @@ class LinksTemplates
             $input = "= $pageName =\n".$input;
         }
         /* Parse it and print it */
-        WikitextParser::init();
         WikitextParser::$backend = new CustomParserBackend;
         $parser = new WikitextParser($input);
         echo $parser -> result;
