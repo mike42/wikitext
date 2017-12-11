@@ -18,7 +18,7 @@ class DefaultParserBackend
      */
     public function renderWithArgs($elementName, $arg)
     {
-        $fn = array($this, 'render_'.$elementName);
+        $fn = array($this, 'render' . ucfirst($elementName));
 
         if (is_callable($fn)) {
             /* If a function is defined to handle this, use it */
@@ -37,7 +37,7 @@ class DefaultParserBackend
      */
     public function encapsulateElement($elementName, $text)
     {
-        $fn = array($this, 'encapsulate_'.$elementName);
+        $fn = array($this, 'encapsulate' . ucfirst($elementName));
 
         if (is_callable($fn)) {
             /* If a function is defined to encapsulate this, use it */
@@ -49,7 +49,7 @@ class DefaultParserBackend
 
     public function renderLineBlock($elementName, $list)
     {
-        $fn = array($this, 'render_'.$elementName);
+        $fn = array($this, 'render' . ucfirst($elementName));
 
         if (is_callable($fn)) {
             /* If a function is defined to encapsulate this, use it */
@@ -59,22 +59,22 @@ class DefaultParserBackend
         }
     }
 
-    public function render_ol($token, $list)
+    public function renderOl($token, $list)
     {
-        return $this -> render_list($token, $list);
+        return $this -> renderList($token, $list);
     }
 
-    public function render_ul($token, $list)
+    public function renderUl($token, $list)
     {
-        return $this -> render_list($token, $list);
+        return $this -> renderList($token, $list);
     }
 
-    public function render_dl($token, $list)
+    public function renderDl($token, $list)
     {
-        return $this -> render_list($token, $list);
+        return $this -> renderList($token, $list);
     }
 
-    public function render_h($token, $headings)
+    public function renderH($token, $headings)
     {
         $outp = "";
         foreach ($headings as $heading) {
@@ -84,7 +84,7 @@ class DefaultParserBackend
         return $outp;
     }
 
-    public function render_pre($token, $lines)
+    public function renderPre($token, $lines)
     {
         $outpline = array();
         foreach ($lines as $line) {
@@ -101,7 +101,7 @@ class DefaultParserBackend
      * @param mixed $list The hierachy representing this list
      * @return string HTML markup for the list
      */
-    public function render_list($token, $list, $expectedDepth = 1)
+    public function renderList($token, $list, $expectedDepth = 1)
     {
         $outp = '';
         $subtoken = "li";
@@ -121,7 +121,7 @@ class DefaultParserBackend
             $outp .= $item['item'];
             if (count($item['child']) > 0) {
                 /* Add children if applicable */
-                $outp .= $this -> render_list($token, $item['child'], $item['depth'] + 1);
+                $outp .= $this -> renderList($token, $item['child'], $item['depth'] + 1);
             }
             if ($diff > 0) {
                 /* Close above extra encapsulation if applicable */
@@ -140,7 +140,7 @@ class DefaultParserBackend
      * @param string $caption Caption of this link (can inlude parsed wikitext)
      * @return string HTML markup for the link
      */
-    public function render_a_internal($arg)
+    public function renderLinkInternal($arg)
     {
         /* Figure out properties based on arguments */
         if (isset($arg[0])) {
@@ -200,7 +200,7 @@ class DefaultParserBackend
                 /* Render an image instead of a link if requested */
                 $info['url'] = $info['target'];
                 $info['caption'] = '';
-                return $this -> render_file($info, $arg);
+                return $this -> renderFile($info, $arg);
             } else if (isset($this -> interwiki[$info['namespace']])) {
                 /* We have a known namespace */
                 $site = $this -> interwiki[$info['namespace']];
@@ -213,7 +213,7 @@ class DefaultParserBackend
         return "<a href=\"".htmlspecialchars($info['url'])."\" title=\"".htmlspecialchars($info['title'])."\"".(!$info['exists']? " class=\"new\"": '').">".$info['caption']."</a>";
     }
 
-    public function render_file($info, $arg)
+    public function renderFile($info, $arg)
     {
         $info['thumb'] = $info['url']; /* Default no no server-side thumbs */
         $info['class'] = '';
@@ -381,7 +381,7 @@ class DefaultParserBackend
      * @param string $caption Caption of this link (can inlude parsed wikitext)
      * @return string HTML markup for the link
      */
-    public function render_a_external($arg)
+    public function renderLinkExternal($arg)
     {
         $caption = $destination = $arg[0];
         if (isset($arg[1])) {
@@ -396,7 +396,7 @@ class DefaultParserBackend
      * @param string $text Text to make bold
      * @return string
      */
-    public function encapsulate_bold($text)
+    public function encapsulateBold($text)
     {
         return "<b>".$text."</b>";
     }
@@ -407,12 +407,12 @@ class DefaultParserBackend
      * @param string $text Text to make bold
      * @return string
      */
-    public function encapsulate_italic($text)
+    public function encapsulateItalic($text)
     {
         return "<i>".$text."</i>";
     }
 
-    public function encapsulate_paragraph($text)
+    public function encapsulateParagraph($text)
     {
         return "<p>".$text."</p>\n";
     }
@@ -420,7 +420,7 @@ class DefaultParserBackend
     /**
      * Generate HTML for a table
      */
-    public function render_table($table)
+    public function renderTable($table)
     {
         if ($table['properties'] == '') {
             $outp = "<table>\n";
@@ -429,7 +429,7 @@ class DefaultParserBackend
         }
 
         foreach ($table['row'] as $row) {
-            $outp .= $this -> render_row($row);
+            $outp .= $this -> renderRow($row);
         }
 
         return $outp."</table>\n";
@@ -438,7 +438,7 @@ class DefaultParserBackend
     /**
      * Render a single row of a table
      */
-    public function render_row($row)
+    public function renderRow($row)
     {
         /* Show row with or without attributes */
         if ($row['properties'] == '') {

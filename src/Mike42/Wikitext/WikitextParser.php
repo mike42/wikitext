@@ -58,8 +58,8 @@ class WikitextParser
         self::$inline = array(
                 'nothing'    => new ParserInlineElement('', ''),
                 'td'         => new ParserInlineElement('', ''), // Just used as a marker
-                'a_internal' => new ParserInlineElement('[[', ']]', '|', '='),
-                'a_external' => new ParserInlineElement('[', ']', ' ', '', 1),
+                'linkInternal' => new ParserInlineElement('[[', ']]', '|', '='),
+                'linkExternal' => new ParserInlineElement('[', ']', ' ', '', 1),
                 'bold'       => new ParserInlineElement("'''", "'''"),
                 'italic'     => new ParserInlineElement("''", "''"),
                 'switch'     => new ParserInlineElement('__', '__'));
@@ -120,7 +120,7 @@ class WikitextParser
             self::init();
         }
         $this -> params = $params;
-        $this -> preprocessed = $this -> preprocess_text($text);
+        $this -> preprocessed = $this -> preprocessText($text);
 
         /* Now divide into paragraphs */
         $sections = explode("\n\n", str_replace("\r\n", "\n", $this -> preprocessed));
@@ -142,7 +142,7 @@ class WikitextParser
      * @param boolean $included true if the text is included, false otherwise
      * @return string
      */
-    private function preprocess_text($text, $arg = array(), $included = false, $depth = 0)
+    private function preprocessText($text, $arg = array(), $included = false, $depth = 0)
     {
         $parsed = '';
 
@@ -203,7 +203,7 @@ class WikitextParser
                                 /* Load wikitext of template, and preprocess it */
                                 if (self::MAX_INCLUDE_DEPTH < 0 || $depth < self::MAX_INCLUDE_DEPTH) {
                                     $markup = trim(self::$backend -> getTemplateMarkup($innerCurKey));
-                                    $parsed .= $this -> preprocess_text($markup, $innerArg, true, $depth + 1);
+                                    $parsed .= $this -> preprocessText($markup, $innerArg, true, $depth + 1);
                                 }
                             }
 
@@ -552,7 +552,7 @@ class WikitextParser
             $table['row'][] = $tmpRow;
         }
 
-        $parsed = self::$backend -> render_table($table);
+        $parsed = self::$backend -> renderTable($table);
         return array('parsed' => $parsed, 'remainder' => "\n". implode("\n", $lines));
     }
 

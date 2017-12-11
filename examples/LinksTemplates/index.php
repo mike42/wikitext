@@ -1,33 +1,30 @@
 <?php
+namespace Example;
+
 require_once(__DIR__ . "/../../vendor/autoload.php");
 use Mike42\Wikitext\DefaultParserBackend;
 use Mike42\Wikitext\WikitextParser;
 
 /**
- * The custom behaviour of templates and links needs to be defined here:
+ * Example of how you might want to encapsulate a page-renderer to make use of the parser.
+ *
+ * We provide new hooks to create internal links and load templates.
  */
-class CustomParserBackend extends DefaultParserBackend
+class LinksTemplates extends DefaultParserBackend
 {
-
     public function getInternalLinkInfo($info)
     {
         /* Take people to the right place */
         $info['dest'] = "index.php?page=".$info['dest'];
         return $info;
     }
-
+    
     public function getTemplateMarkup($template)
     {
         return LinksTemplates::getPageText($template);
     }
-}
-
-/**
- * Example of how you might want to encapsulate a page-renderer to make use of the parser.
- */
-class LinksTemplates
-{
-    function showPage($pageName)
+    
+    public static function showPage($pageName)
     {
         if (!$input = self::getPageText($pageName)) {
             /* 404 text */
@@ -36,7 +33,7 @@ class LinksTemplates
             $input = "= $pageName =\n".$input;
         }
         /* Parse it and print it */
-        WikitextParser::$backend = new CustomParserBackend;
+        WikitextParser::$backend = new LinksTemplates();
         $parser = new WikitextParser($input);
         echo $parser -> result;
         echo "<hr /><b>Markup for this page:</b><pre>".htmlentities($input)."</pre>";
@@ -49,7 +46,7 @@ class LinksTemplates
      * @param   string $pageName   Identifier for the page name
      * @return  boolean|string     Text of the page, or false if it could not be found
      */
-    function getPageText($pageName)
+    public static function getPageText($pageName)
     {
         $fn = "page/" . urlencode($pageName) . ".txt";
         if (!file_exists($fn)) {
