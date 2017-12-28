@@ -358,18 +358,12 @@ class DefaultParserBackend
         }
 
         $this -> interwiki = array();
-        if (!@$data = file_get_contents(dirname(__FILE__) . "/interwiki.ser")) {
-            /* Return blank array if interwiki table doesnt exist */
-            return;
-        }
-
+        $json = file_get_contents(__DIR__ . "/interwiki.json");
         /* Unserialize data and load into associative array for easy lookup */
-        $arr = unserialize($data);
-        if (isset($arr['query']['interwikimap'])) {
-            foreach ($arr['query']['interwikimap'] as $site) {
-                if (isset($site['prefix']) && isset($site['url'])) {
-                    $this -> interwiki[$site['prefix']] = $site['url'];
-                }
+        $arr = json_decode($json);
+        foreach ($arr -> query -> interwikimap as $site) {
+            if (isset($site -> prefix) && isset($site -> url)) {
+                $this -> interwiki[$site -> prefix] = $site -> url;
             }
         }
     }
