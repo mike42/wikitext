@@ -29,7 +29,7 @@ div.floatright,table.floatright,div.floatleft,table.floatleft {
 
     <?php
     # Version of SimpleTest to open in a web-browser
-    $input = file_get_contents("input.txt");
+    $input = file_get_contents(__DIR__ . "/input.txt");
 
     $parser = new WikitextParser($input);
     echo $parser -> result;
