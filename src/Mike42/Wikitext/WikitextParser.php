@@ -67,10 +67,10 @@ class WikitextParser
         /* Create lookup table for efficiency */
         $inlineLookup = array();
         foreach (self::$inline as $key => $token) {
-            if (mb_strlen($token -> startTag) != 0) {
-                $c = mb_substr($token -> startTag, 0, 1);
+            if (count($token -> startTag) != 0) {
+                $c = $token -> startTag[0];
                 if (!isset($inlineLookup[$c])) {
-                    $inlineLookup[$c] = array();
+                    $inlineLookup[$c] = [];
                 }
                 $inlineLookup[$c][$key] = self::$inline[$key];
             }
@@ -99,10 +99,9 @@ class WikitextParser
     /**
      * Parse a given document/page of text (main entry point)
      *
-     * @param unknown_type $text
-     * @param unknown_type $included
+     * @param string $text
      */
-    public static function parse($text)
+    public static function parse(string $text)
     {
         $parser = new WikitextParser($text);
         return $parser -> result;
@@ -120,7 +119,7 @@ class WikitextParser
             self::init();
         }
         $this -> params = $params;
-        $this -> preprocessed = $this -> preprocessText($text);
+        $this -> preprocessed = $this -> preprocessText(self::explode_string($text));
 
         /* Now divide into paragraphs */
         $sections = explode("\n\n", str_replace("\r\n", "\n", $this -> preprocessed));
@@ -135,6 +134,10 @@ class WikitextParser
         $this -> result = $newtext;
     }
 
+    private static function explode_string($string) {
+        return $chrArray = preg_split('//u', $string, -1, PREG_SPLIT_NO_EMPTY);
+    }
+
     /**
      * Handle template arguments and other oddities. This section of the parser is single-pass and linear, with the exception of the part which substitutes templates
      * @param string $text wikitext to handle
@@ -142,29 +145,28 @@ class WikitextParser
      * @param boolean $included true if the text is included, false otherwise
      * @return string
      */
-    private function preprocessText($text, $arg = array(), $included = false, $depth = 0)
+    private function preprocessText(array $textChars, $arg = array(), $included = false, $depth = 0)
     {
         $parsed = '';
-
-        $len = mb_strlen($text);
+        $len = count($textChars);
         for ($i = 0; $i < $len; $i++) {
             $hit = false;
                 
             foreach (self::$preprocessor as $key => $child) {
-                if (mb_strlen($child -> endTag) != 0 && $child -> endTag == mb_substr($text, $i, mb_strlen($child -> endTag))) {
+                if (self::tag_is_at($child -> endTag, $textChars, $i)) {
                     if (($key == 'includeonly' && $included) || ($key == 'noinclude' && !$included)) {
                         $hit = true;
-                        $i += mb_strlen($child -> endTag);
+                        $i += count($child -> endTag);
 
                         /* Ignore expected end-tags */
                         break;
                     }
                 }
 
-                if (mb_strlen($child -> startTag) != 0 && $child -> startTag == mb_substr($text, $i, mb_strlen($child -> startTag))) {
+                if (self::tag_is_at($child -> startTag, $textChars, $i)) {
                     /* Hit a symbol. Parse it and keep going after the result */
                     $hit = true;
-                    $i += mb_strlen($child -> startTag);
+                    $i += count($child -> startTag);
                         
                     if (($key == 'includeonly' && $included) || ($key == 'noinclude' && !$included)) {
                         /* If this is a good tag, ignore it! */
@@ -179,8 +181,8 @@ class WikitextParser
                     for ($i = $i; $i < $len; $i++) {
                         $innerHit = false;
 
-                        if (mb_strlen($child -> endTag) != 0 && $child -> endTag == mb_substr($text, $i, mb_strlen($child -> endTag))) {
-                            $i += mb_strlen($child -> endTag);
+                        if (self::tag_is_at($child -> endTag, $textChars, $i)) {
+                            $i += count($child -> endTag);
                             /* Clear buffers now */
                             if ($innerCurKey == '') {
                                 array_push($innerArg, $innerBuffer);
@@ -203,7 +205,7 @@ class WikitextParser
                                 /* Load wikitext of template, and preprocess it */
                                 if (self::MAX_INCLUDE_DEPTH < 0 || $depth < self::MAX_INCLUDE_DEPTH) {
                                     $markup = trim(self::$backend -> getTemplateMarkup($innerCurKey));
-                                    $parsed .= $this -> preprocessText($markup, $innerArg, true, $depth + 1);
+                                    $parsed .= $this -> preprocessText(self::explode_string($markup), $innerArg, true, $depth + 1);
                                 }
                             }
 
@@ -214,7 +216,7 @@ class WikitextParser
 
                         /* Argument splitting -- A dumber, non-recursiver version of what is used in ParseInline() */
                         if ($child -> hasArgs && ($child -> argLimit == 0 || $child -> argLimit > count($innerArg))) {
-                            if (mb_strlen($child -> argSep) != 0 && $child -> argSep == mb_substr($text, $i, mb_strlen($child -> argSep))) {
+                            if (self::tag_is_at($child -> argSep, $textChars, $i)) {
                                 /* Hit argument separator */
                                 if ($innerCurKey == '') {
                                     array_push($innerArg, $innerBuffer);
@@ -223,20 +225,20 @@ class WikitextParser
                                 }
                                 $innerCurKey = ''; // Reset key
                                 $innerBuffer = ''; // Reset parsed values
-                                $i += mb_strlen($child -> argSep) - 1;
+                                $i += count($child -> argSep) - 1;
                                 $innerHit = true;
-                            } elseif ($innerCurKey == '' && mb_strlen($child -> argNameSep) != 0 && $child -> argNameSep == mb_substr($text, $i, mb_strlen($child -> argNameSep))) {
+                            } elseif ($innerCurKey == '' && self::tag_is_at($child -> argNameSep, $textChars, $i)) {
                                 /* Hit name/argument splitter */
                                 $innerCurKey = $innerBuffer; // Set key
                                 $innerBuffer = '';  // Reset parsed values
-                                $i += mb_strlen($child -> argNameSep) - 1;
+                                $i += count($child -> argNameSep) - 1;
                                 $innerHit = true;
                             }
                         }
 
                         if (!$innerHit) {
                             /* Append non-matching characters to buffer as we go */
-                            $innerBuffer .= mb_substr($text, $i, 1);
+                            $innerBuffer .= $textChars[$i];
                         }
                     }
                 }
@@ -244,13 +246,26 @@ class WikitextParser
 
             /* Add non-affected characters as we go */
             if (!$hit) {
-                $c = mb_substr($text, $i, 1);
+                $c = $textChars[$i];
                 $parsed .= $c;
             } else {
                 $i -= 1;
             }
         }
         return $parsed;
+    }
+
+    private static function tag_is_at(array $tag, array $textChars, int $position) {
+        $tag_len = count($tag);
+        $str_len = count($textChars);
+        if($tag_len == 0 || $position + $tag_len > $str_len || $textChars[$position] != $tag[0]) { //$textChars[$position] != $tag[0]) {
+            return false;
+        }
+        // TODO might work faster if we can ditch use of strings
+        $tag = implode($tag);
+        $len = mb_strlen($tag);
+        $text = implode(array_slice($textChars, $position, $len));
+        return $len !== 0 && $tag == $text;
     }
 
     /**
@@ -260,7 +275,7 @@ class WikitextParser
      * @param string $text Text to parse
      * @param $token The name of the current inline element, if inside one.
      */
-    private function parseInline($text, $token = '')
+    private function parseInline(string $text, string $token = '')
     {
         /* Quick escape if we've run into a table */
         $inParagraph = false;
@@ -282,15 +297,17 @@ class WikitextParser
         $arg = array();
         $curKey = '';
 
-        $len = mb_strlen($text);
+        $textChars = self::explode_string($text);
+        $len = count($textChars);
         for ($i = 0; $i < $len; $i++) {
             /* Looping through each character */
             $hit = false; // State so that the last part knows whether to simply append this as an unmatched character
                 
             /* Looking for this element's close-token */
-            if (mb_strlen($inlineElement -> endTag) != 0 && $inlineElement -> endTag == mb_substr($text, $i, mb_strlen($inlineElement -> endTag))) {
+            if (self::tag_is_at($inlineElement -> endTag, $textChars, $i)) {
+                //mb_strlen($inlineElement -> endTag) != 0 && $inlineElement -> endTag == mb_substr($text, $i, mb_strlen($inlineElement -> endTag))) {
                 /* Hit a close tag: Stop parsing here, return the remainder, and let the parent continue */
-                $start = $i + mb_strlen($inlineElement -> endTag);
+                $start = $i + count($inlineElement -> endTag);
                 $remainder = mb_substr($text, $start, $len - $start);
 
                 if ($inlineElement -> hasArgs) {
@@ -310,7 +327,8 @@ class WikitextParser
                 
             /* Next priority is looking for this element's agument tokens if applicable */
             if ($inlineElement -> hasArgs && ($inlineElement -> argLimit == 0 || $inlineElement -> argLimit > count($arg))) {
-                if (mb_strlen($inlineElement -> argSep) != 0 && $inlineElement -> argSep == mb_substr($text, $i, mb_strlen($inlineElement -> argSep))) {
+                if (self::tag_is_at($inlineElement -> argSep, $textChars, $i)) {
+                    // mb_strlen($inlineElement -> argSep) != 0 && $inlineElement -> argSep == mb_substr($text, $i, mb_strlen($inlineElement -> argSep))) {
                     /* Hit argument separator */
                     if ($curKey == '') {
                         array_push($arg, $buffer);
@@ -321,26 +339,28 @@ class WikitextParser
                     $curKey = ''; // Reset key
                     $buffer = ''; // Reset parsed values
                     /* Handle position properly */
-                    $i += mb_strlen($inlineElement -> argSep) - 1;
+                    $i += count($inlineElement -> argSep) - 1;
                     $hit = true;
-                } elseif ($curKey == '' && mb_strlen($inlineElement -> argNameSep) != 0 && $inlineElement -> argNameSep == mb_substr($text, $i, mb_strlen($inlineElement -> argNameSep))) {
+                } elseif ($curKey == '' && self::tag_is_at($inlineElement -> argNameSep, $textChars, $i)) {
+                    //mb_strlen($inlineElement -> argNameSep) != 0 && $inlineElement -> argNameSep == mb_substr($text, $i, mb_strlen($inlineElement -> argNameSep))) {
                     /* Hit name/argument splitter */
                     $curKey = $buffer; // Set key
                     $buffer = '';  // Reset parsed values
                     /* Handle position properly */
-                    $i += mb_strlen($inlineElement -> argNameSep) - 1;
+                    $i += count($inlineElement -> argNameSep) - 1;
                     $hit = true;
                 }
             }
 
             /* Looking for new open-tokens */
-            $c = mb_substr($text, $i, 1);
+            $c = $textChars[$i];
             if (isset(self::$inlineLookup[$c])) {
                 /* There are inline elements which start with this character. Check each one,.. */
                 foreach (self::$inlineLookup[$c] as $key => $child) {
-                    if (!$hit && mb_strlen($child -> startTag) != 0 && $child -> startTag == mb_substr($text, $i, mb_strlen($child -> startTag))) {
+                    if (!$hit && self::tag_is_at($child -> startTag, $textChars, $i)) {
+                        //mb_strlen($child -> startTag) != 0 && $child -> startTag == mb_substr($text, $i, mb_strlen($child -> startTag))) {
                         /* Hit a symbol. Parse it and keep going after the result */
-                        $start = $i + mb_strlen($child -> startTag);
+                        $start = $i + count($child -> startTag);
                         $remainder = mb_substr($text, $start, $len - $start);
 
                         /* Regular, recursively-parsed element */
@@ -348,7 +368,8 @@ class WikitextParser
                         $buffer .= self::$backend -> encapsulateElement($key, $result['parsed']);
 
                         $text = $result['remainder'];
-                        $len = mb_strlen($text);
+                        $textChars = self::explode_string($text);
+                        $len = count($textChars);
                         $i = -1;
                         $hit = true;
                     }
@@ -357,13 +378,14 @@ class WikitextParser
 
             if (!$hit) {
                 if ($c == "\n") {
-                    if (self::$tableStart -> startTag == mb_substr($text, $i + 1, mb_strlen(self::$tableStart -> startTag))) {
+                    if (self::tag_is_at(self::$tableStart -> startTag, $textChars, $i + 1)) {
+                        //self::$tableStart -> startTag == mb_substr($text, $i + 1, mb_strlen(self::$tableStart -> startTag))) {
                         $hit = true;
-                        $start = $i + 1 + mb_strlen(self::$tableStart -> startTag);
+                        $start = $i + 1 + count(self::$tableStart -> startTag);
                         $key = 'table';
-                    } else {
+                    } else if ($i < $len - 1){
                         /* Check for non-table line-based stuff coming up next, each time \n is found */
-                        $next = mb_substr($text, $i + 1, 1);
+                        $next = $textChars[$i + 1];
                         foreach (self::$lineBlock as $key => $block) {
                             foreach ($block -> startChar as $char) {
                                 if (!$hit && $next == $char) {
@@ -397,7 +419,8 @@ class WikitextParser
                             
                         /* Same sort of thing as above */
                         $text = $result['remainder'];
-                        $len = mb_strlen($text);
+                        $textChars = self::explode_string($text);
+                        $len = count($textChars);
                         $i = -1;
                     }
 
@@ -506,7 +529,7 @@ class WikitextParser
 
         while (count($lines) > 0) {
             $line = array_shift($lines);
-            if (trim($line) == self::$tableStart -> endTag) {
+            if (trim($line) == implode(self::$tableStart -> endTag)) {
                 /* End of table found */
                 break;
             }
@@ -567,7 +590,9 @@ class WikitextParser
     private function parseTableCells($token, $text, $colsSoFar)
     {
         $tableElement = self::$tableBlock[$token];
-        $len = mb_strlen($text);
+        $textChars = self::explode_string($text);
+        $len = count($textChars);
+        
 
         $tmpCol = array('arg' => array(), 'content' => '', 'token' => $token);
         $argCount = 0;
@@ -577,17 +602,19 @@ class WikitextParser
         for ($i = 0; $i < $len; $i++) {
             $hit = false;
             /* We basically detect the start of any inline/lineblock/table elements and, knowing that the inline parser knows how to handle them, throw then wayward */
-            $c = mb_substr($text, $i, 1);
+            $c = $textChars[$i];
             if (isset(self::$inlineLookup[$c])) {
                 /* There are inline elements which start with this character. Check each one,.. */
                 foreach (self::$inlineLookup[$c] as $key => $child) {
-                    if (!$hit && mb_strlen($child -> startTag) != 0 && $child -> startTag == mb_substr($text, $i, mb_strlen($child -> startTag))) {
+                    if (!$hit && self::tag_is_at($child -> startTag, $textChars, $i)) {
+                        //mb_strlen($child -> startTag) != 0 && $child -> startTag == mb_substr($text, $i, mb_strlen($child -> startTag))) {
                         $hit = true;
                     }
                 }
             }
             if ($c == "\n") {
-                if (self::$tableStart -> startTag == mb_substr($text, $i + 1, mb_strlen(self::$tableStart -> startTag))) {
+                if (self::tag_is_at(self::$tableStart -> startTag, $textChars, $i + 1)) {
+                    //self::$tableStart -> startTag == mb_substr($text, $i + 1, mb_strlen(self::$tableStart -> startTag))) {
                     /* Table is coming up */
                     $hit = true;
                 } else {
@@ -611,7 +638,8 @@ class WikitextParser
                 $result = $this -> parseInline($remainder, 'td');
                 $buffer .= $result['parsed'];
                 $text = $result['remainder'];
-                $len = mb_strlen($text);
+                $textChars = self::explode_string($text);
+                $len = count($textChars);
                 $i = -1;
             }
                 
