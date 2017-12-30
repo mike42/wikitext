@@ -109,7 +109,8 @@ class WikitextParser
         self::$initialised = true;
     }
 
-    private static function elementLookupTable(array $elements) {
+    private static function elementLookupTable(array $elements)
+    {
         $lookup = [];
         foreach ($elements as $key => $token) {
             if (count($token -> startTag) != 0) {
@@ -146,7 +147,7 @@ class WikitextParser
             self::init();
         }
         $this -> params = $params;
-        $this -> preprocessed = $this -> preprocessText(self::explode_string($text));
+        $this -> preprocessed = $this -> preprocessText(self::explodeString($text));
 
         /* Now divide into paragraphs */
         // TODO operate on arrays instead of strings here
@@ -155,7 +156,7 @@ class WikitextParser
         $newtext = [];
         foreach ($sections as $section) {
             /* Newlines at the start/end have special meaning (compare to how this is called from parseLineBlock) */
-            $sectionChars = self::explode_string("\n".$section);
+            $sectionChars = self::explodeString("\n".$section);
             $result = $this -> parseInline($sectionChars, 'p');
             $newtext[] = $result['parsed'];
         }
@@ -163,7 +164,8 @@ class WikitextParser
         $this -> result = implode($newtext);
     }
 
-    private static function explode_string(string $string) {
+    private static function explodeString(string $string)
+    {
         return $chrArray = preg_split('//u', $string, -1, PREG_SPLIT_NO_EMPTY);
     }
 
@@ -181,7 +183,7 @@ class WikitextParser
         for ($i = 0; $i < $len; $i++) {
             $hit = false;
             $c = $textChars[$i];
-            if(!isset(self::$preprocessorChars[$c])) {
+            if (!isset(self::$preprocessorChars[$c])) {
                 // Fast exit for characters that do not start a tag.
                 // TODO Could work faster if we didn't concatenate each character
                 $parsed .= $c;
@@ -240,7 +242,7 @@ class WikitextParser
                                 /* Load wikitext of template, and preprocess it */
                                 if (self::MAX_INCLUDE_DEPTH < 0 || $depth < self::MAX_INCLUDE_DEPTH) {
                                     $markup = trim(self::$backend -> getTemplateMarkup($innerCurKey));
-                                    $parsed .= $this -> preprocessText(self::explode_string($markup), $innerArg, true, $depth + 1);
+                                    $parsed .= $this -> preprocessText(self::explodeString($markup), $innerArg, true, $depth + 1);
                                 }
                             }
 
@@ -289,10 +291,11 @@ class WikitextParser
         return $parsed;
     }
 
-    private static function tagIsAt(array $tag, array $textChars, int $position) {
+    private static function tagIsAt(array $tag, array $textChars, int $position)
+    {
         $tag_len = count($tag);
         $str_len = count($textChars);
-        if($tag_len == 0 || $position + $tag_len > $str_len || $textChars[$position] != $tag[0]) { //$textChars[$position] != $tag[0]) {
+        if ($tag_len == 0 || $position + $tag_len > $str_len || $textChars[$position] != $tag[0]) { //$textChars[$position] != $tag[0]) {
             return false;
         }
         // TODO might work faster if we can ditch use of strings
@@ -302,8 +305,9 @@ class WikitextParser
         return $len !== 0 && $tag == $text;
     }
 
-    private static function tagIsAtString(string $tag, array $textChars, int $position) {
-        $tagChars = self::explode_string($tag);
+    private static function tagIsAtString(string $tag, array $textChars, int $position)
+    {
+        $tagChars = self::explodeString($tag);
         return self::tagIsAt($tagChars, $textChars, $position);
     }
     
@@ -314,7 +318,8 @@ class WikitextParser
      * @param string $text Text to parse
      * @param $token The name of the current inline element, if inside one.
      */
-    private function parseInline(array $textChars, string $token = '') {
+    private function parseInline(array $textChars, string $token = '')
+    {
         /* Quick escape if we've run into a table */
         $inParagraph = false;
         if ($token == '' || !isset(self::$inline[$token])) {
@@ -340,7 +345,7 @@ class WikitextParser
             /* Looping through each character */
             $hit = false; // State so that the last part knows whether to simply append this as an unmatched character
             $c = $textChars[$i];
-            if(!isset(self::$inlineChars[$c])) {
+            if (!isset(self::$inlineChars[$c])) {
                 // Fast exit for characters that do not start a tag.
                 // TODO Could work faster if we didn't concatenate each character
                 $buffer .= $c;
@@ -421,7 +426,7 @@ class WikitextParser
                         $hit = true;
                         $start = $i + 1 + count(self::$tableStart -> startTag);
                         $key = 'table';
-                    } else if ($i < $len - 1){
+                    } else if ($i < $len - 1) {
                         /* Check for non-table line-based stuff coming up next, each time \n is found */
                         $next = $textChars[$i + 1];
                         foreach (self::$lineBlock as $key => $block) {
@@ -533,7 +538,7 @@ class WikitextParser
                     $endcount = self::countCharString($lineBlockElement -> endChar, strrev($line), $lineBlockElement -> limit);
                     $line = mb_substr($line, 0, mb_strlen($line) - $endcount);
                 }
-                $result = $this -> parseInline(self::explode_string($line));
+                $result = $this -> parseInline(self::explodeString($line));
                 $list[] = array('depth' => $count, 'item' => $result['parsed'], 'char' => $char);
             }
         }
@@ -544,7 +549,7 @@ class WikitextParser
         }
         $parsed = self::$backend -> renderLineBlock($token, $list);
 
-        return array('parsed' => $parsed, 'remainderChars' => self::explode_string("\n". implode("\n", $lines)));
+        return array('parsed' => $parsed, 'remainderChars' => self::explodeString("\n". implode("\n", $lines)));
     }
 
     /**
@@ -565,7 +570,7 @@ class WikitextParser
 
         while (count($lines) > 0) {
             $line = array_shift($lines);
-            $lineChars = self::explode_string($line);
+            $lineChars = self::explodeString($line);
             if (trim($line) == implode(self::$tableStart -> endTag)) {
                 /* End of table found */
                 break;
@@ -595,7 +600,7 @@ class WikitextParser
                     /* Clobber the remaining text together and throw it to the cell parser */
                     $line = implode($lineChars);
                     array_unshift($lines, $line);
-                    $remainderChars = self::explode_string(implode("\n", $lines));
+                    $remainderChars = self::explodeString(implode("\n", $lines));
                     $result = $this -> parseTableCells($token, $remainderChars, $tmpRow['col']);
                     $lines = explode("\n", implode($result['remainderChars']));
                     $tmpRow['col'] = $result['col'];
@@ -619,7 +624,7 @@ class WikitextParser
         }
 
         $parsed = self::$backend -> renderTable($table);
-        return array('parsed' => $parsed, 'remainderChars' => self::explode_string("\n". implode("\n", $lines)));
+        return array('parsed' => $parsed, 'remainderChars' => self::explodeString("\n". implode("\n", $lines)));
     }
 
     /**
