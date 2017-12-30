@@ -9,11 +9,11 @@ class ParserTableElement
     public $limit;
     public $inlinesep;
 
-    public function __construct($lineStart, $argsep, $inlinesep, $limit)
+    public function __construct(string $lineStart, string $argsep, string $inlinesep, $limit)
     {
-        $this -> lineStart = $lineStart;
-        $this -> argsep = $argsep;
-        $this -> inlinesep = $inlinesep;
+        $this -> lineStart = str_split($lineStart);
+        $this -> argsep = str_split($argsep);
+        $this -> inlinesep = str_split($inlinesep);
         $this -> limit = $limit;
     }
 }

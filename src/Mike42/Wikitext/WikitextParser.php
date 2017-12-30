@@ -152,14 +152,15 @@ class WikitextParser
         // TODO operate on arrays instead of strings here
         $sections = explode("\n\n", str_replace("\r\n", "\n", $this -> preprocessed));
 
-        $newtext = "";
+        $newtext = [];
         foreach ($sections as $section) {
             /* Newlines at the start/end have special meaning (compare to how this is called from parseLineBlock) */
-            $result = $this -> parseInlineString("\n".$section, 'p');
-            $newtext .= $result['parsed'];
+            $sectionChars = self::explode_string("\n".$section);
+            $result = $this -> parseInline($sectionChars, 'p');
+            $newtext[] = $result['parsed'];
         }
 
-        $this -> result = $newtext;
+        $this -> result = implode($newtext);
     }
 
     private static function explode_string(string $string) {
@@ -352,7 +353,6 @@ class WikitextParser
                 /* Hit a close tag: Stop parsing here, return the remainder, and let the parent continue */
                 $start = $i + count($inlineElement -> endTag);
                 $remainderChars = array_slice($textChars, $start, $len - $start);
-                $remainder = implode($remainderChars);
 
                 if ($inlineElement -> hasArgs) {
                     /* Handle arguments if needed */
@@ -366,7 +366,7 @@ class WikitextParser
                 
                 /* Clean up and quit */
                 $parsed .= $buffer; /* As far as I can tall $inPargraph should always be false here? */
-                return array('parsed' => $parsed, 'remainder' => $remainder);
+                return array('parsed' => $parsed, 'remainderChars' => $remainderChars);
             }
             
             /* Next priority is looking for this element's agument tokens if applicable */
@@ -407,8 +407,7 @@ class WikitextParser
                         $result = $this -> parseInline($remainderChars, $key);
                         $buffer .= self::$backend -> encapsulateElement($key, $result['parsed']);
                         
-                        $text = $result['remainder'];
-                        $textChars = self::explode_string($text);
+                        $textChars = $result['remainderChars'];
                         $len = count($textChars);
                         $i = -1;
                         $hit = true;
@@ -439,15 +438,12 @@ class WikitextParser
                     if ($hit) {
                         /* Go over what's been found */
                         $remainderChars = array_slice($textChars, $start, $len - $start);
-                        $remainder = implode($remainderChars);
-                        
                         if ($key == 'table') {
-                            $result = $this -> parseTableString($remainder);
+                            $result = $this -> parseTable($remainderChars);
                         } else {
                             /* Let parseLineBlock take care of this on a per-line basis */
-                            $result = $this -> parseLineBlockString($remainder, $key);
+                            $result = $this -> parseLineBlock($remainderChars, $key);
                         }
-                        
                         if ($buffer != '') {
                             /* Something before this was part of a paragraph */
                             $parsed .= self::$backend -> encapsulateElement('paragraph', $buffer);
@@ -456,10 +452,7 @@ class WikitextParser
                         $buffer = "";
                         /* Now append this non-paragraph element */
                         $parsed .= $result['parsed'];
-                        
-                        /* Same sort of thing as above */
-                        $text = $result['remainder'];
-                        $textChars = self::explode_string($text);
+                        $textChars = $result['remainderChars'];
                         $len = count($textChars);
                         $i = -1;
                     }
@@ -478,8 +471,7 @@ class WikitextParser
             if ($token == 'td') {
                 /* We only get here from table syntax if something else was being parsed, so we can quit here */
                 $parsed = $buffer;
-                $text = implode($textChars);
-                return array('parsed' => $parsed, 'remainder' => $text);
+                return array('parsed' => $parsed, 'remainderChars' => $textChars);
             }
         }
         
@@ -500,17 +492,7 @@ class WikitextParser
             $parsed .= $buffer;
         }
         
-        return array('parsed' => $parsed, 'remainder' => '');
-    }
-
-    /**
-     * Compatibility for parts of the parser that still use multibyte strings.
-     * Delete when not used anywhere.
-     */
-    private function parseInlineString(string $text, string $token = '')
-    {
-        $textChars = self::explode_string($text);
-        return $this -> parseInline($textChars, $token);
+        return array('parsed' => $parsed, 'remainderChars' => []);
     }
 
     /**
@@ -519,8 +501,10 @@ class WikitextParser
      * @param $text Wikitext block to parse
      * @param $token name of the LineBlock token which we suspect
      */
-    private function parseLineBlockString(string $text, string $token)
+    private function parseLineBlock(array $textChars, string $token)
     {
+        $text = implode($textChars);
+        
         /* Block element we are using */
         $lineBlockElement = self::$lineBlock[$token];
 
@@ -549,7 +533,7 @@ class WikitextParser
                     $endcount = self::countCharString($lineBlockElement -> endChar, strrev($line), $lineBlockElement -> limit);
                     $line = mb_substr($line, 0, mb_strlen($line) - $endcount);
                 }
-                $result = $this -> parseInlineString($line);
+                $result = $this -> parseInline(self::explode_string($line));
                 $list[] = array('depth' => $count, 'item' => $result['parsed'], 'char' => $char);
             }
         }
@@ -560,7 +544,7 @@ class WikitextParser
         }
         $parsed = self::$backend -> renderLineBlock($token, $list);
 
-        return array('parsed' => $parsed, 'remainder' => "\n". implode("\n", $lines));
+        return array('parsed' => $parsed, 'remainderChars' => self::explode_string("\n". implode("\n", $lines)));
     }
 
     /**
@@ -569,8 +553,9 @@ class WikitextParser
      * @param string $text Text to parse
      * @return multitype:string parsed and remaining text
      */
-    private function parseTableString(string $text)
+    private function parseTable(array $textChars)
     {
+        $text = implode($textChars);
         $parsed = '';
         $buffer = '';
 
@@ -589,7 +574,7 @@ class WikitextParser
             $hit = false;
             foreach (self::$tableBlock as $token => $block) {
                 /* Looking for matching per-line elements */
-                if (!$hit && self::tagIsAtString($block -> lineStart, $lineChars, 0)) {
+                if (!$hit && self::tagIsAt($block -> lineStart, $lineChars, 0)) {
                     $hit = true;
                     break;
                 }
@@ -597,7 +582,9 @@ class WikitextParser
 
             if ($hit) {
                 /* Cut found token off start of line */
-                $line = mb_substr($line, mb_strlen($block -> lineStart), mb_strlen($line) - mb_strlen($block -> lineStart));
+                $lineStart = count($block -> lineStart);
+                $lineLen = count($lineChars);
+                $lineChars = array_slice($lineChars, $lineStart, $lineLen - $lineStart);
 
                 if ($token == 'td' || $token == 'th') {
                     if (!isset($tmpRow)) {
@@ -606,9 +593,11 @@ class WikitextParser
                     }
 
                     /* Clobber the remaining text together and throw it to the cell parser */
+                    $line = implode($lineChars);
                     array_unshift($lines, $line);
-                    $result = $this -> parseTableCellsString($token, implode("\n", $lines), $tmpRow['col']);
-                    $lines = explode("\n", $result['remainder']);
+                    $remainderChars = self::explode_string(implode("\n", $lines));
+                    $result = $this -> parseTableCells($token, $remainderChars, $tmpRow['col']);
+                    $lines = explode("\n", implode($result['remainderChars']));
                     $tmpRow['col'] = $result['col'];
                 } elseif ($token == 'tr') {
                     if (isset($tmpRow)) {
@@ -616,8 +605,10 @@ class WikitextParser
                         $table['row'][] = $tmpRow;
                     }
                     /* Clearing current row and set properties */
-                    $tmpRow = array('properties' => $line, 'col' => []);
-                    $tmpRow['properties'] = $line;
+                    $tmpRow = array(
+                        'properties' => implode($lineChars),
+                        'col' => []
+                    );
                 }
             }
         }
@@ -628,16 +619,7 @@ class WikitextParser
         }
 
         $parsed = self::$backend -> renderTable($table);
-        return array('parsed' => $parsed, 'remainder' => "\n". implode("\n", $lines));
-    }
-
-    /**
-     * Compatibility for parts of the parser that still use multibyte strings.
-     * Delete when not used anywhere.
-     */
-    private function parseTableCellsString(string $token, string $text, array $colsSoFar) {
-        $textChars = self::explode_string($text);
-        return $this -> parseTableCells($token, $textChars, $colsSoFar);
+        return array('parsed' => $parsed, 'remainderChars' => self::explode_string("\n". implode("\n", $lines)));
     }
 
     /**
@@ -694,13 +676,12 @@ class WikitextParser
                 $remainderChars = array_slice($textChars, $start, $len - $start);
                 $result = $this -> parseInline($remainderChars, 'td');
                 $buffer .= $result['parsed'];
-                $text = $result['remainder'];
-                $textChars = self::explode_string($text);
+                $textChars = $result['remainderChars'];
                 $len = count($textChars);
                 $i = -1;
             }
                 
-            if (!$hit && self::tagIsAtString($tableElement -> inlinesep, $textChars, $i)) {
+            if (!$hit && self::tagIsAt($tableElement -> inlinesep, $textChars, $i)) {
                 /* Got column separator, so this column is now finished */
                 $tmpCol['content'] = $buffer;
                 $colsSoFar[] = $tmpCol;
@@ -709,16 +690,16 @@ class WikitextParser
                 $tmpCol = array('arg' => [], 'content' => '', 'token' => $token);
                 $buffer = '';
                 $hit = true;
-                $i += mb_strlen($tableElement -> inlinesep) - 1;
+                $i += count($tableElement -> inlinesep) - 1;
                 $argCount = 0;
             }
                 
-            if (!$hit && $argCount < ($tableElement -> limit) && self::tagIsAtString($tableElement -> argsep, $textChars, $i)) {
+            if (!$hit && $argCount < ($tableElement -> limit) && self::tagIsAt($tableElement -> argsep, $textChars, $i)) {
                 /* Got argument separator. Shift off the last argument */
                 $tmpCol['arg'][] = $buffer;
                 $buffer = '';
                 $hit = true;
-                $i += mb_strlen($tableElement -> argsep) - 1;
+                $i += count($tableElement -> argsep) - 1;
                 $argCount++;
             }
                 
@@ -727,7 +708,7 @@ class WikitextParser
                 if ($c == "\n") {
                     /* Checking that the next line isn't starting a different element of the table */
                     foreach (self::$tableBlock as $key => $block) {
-                        if (self::tagIsAtString($block -> lineStart, $textChars, $i + 1)) {
+                        if (self::tagIsAt($block -> lineStart, $textChars, $i + 1)) {
                             /* Next line is more table syntax. bail otu and let something else handle it */
                             break 2;
                         }
@@ -742,9 +723,8 @@ class WikitextParser
         $colsSoFar[] = $tmpCol;
         $start = $i + 1;
         $remainderChars = array_slice($textChars, $start, $len - $start);
-        $remainder = implode($remainderChars);
 
-        return array('col' => $colsSoFar, 'remainder' => $remainder);
+        return array('col' => $colsSoFar, 'remainderChars' => $remainderChars);
     }
 
     /**
