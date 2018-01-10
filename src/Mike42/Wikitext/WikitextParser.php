@@ -88,9 +88,9 @@ class WikitextParser
         /* Line-block elements. These are characters which have a special meaning at the start of lines, and use the next end-line as a close tag. */
         self::$lineBlock = array(
                 'pre' => new ParserLineBlockElement(array(" "), [], 1, false),
-                'ul'  => new ParserLineBlockElement(array("*"), [], 0, true),
-                'ol'  => new ParserLineBlockElement(array("#"), [], 0, true),
-                'dl'  => new ParserLineBlockElement(array(":", ";"), [], 0, true),
+                'ul'  => new ParserLineBlockElement(array("*"), [], 32, true),
+                'ol'  => new ParserLineBlockElement(array("#"), [], 32, true),
+                'dl'  => new ParserLineBlockElement(array(":", ";"), [], 32, true),
                 'h'   => new ParserLineBlockElement(array("="), array("="), 6, false));
 
         self::$preprocessor = array(
@@ -514,55 +514,25 @@ class WikitextParser
         // Attempted re-write
         $lineStart = 0;
         $list = [];
-//         while(($lineLen = self::getLineLen($textChars, $lineStart)) !== false) {
-//             $count = self::countChar($lineBlockElement -> startChar, $textChars, $lineStart, $lineBlockElement -> limit);
-//             if ($count == 0) {
-//                 break;
-//             } else {
-//                 $lineChars = [];
-//                 $char = '*'; // use FINAL char to appear in $count
-                
-//                 if (count($lineBlockElement -> endChar) > 0) {
-//                     /* Also need to cut off end letters, such as in == Heading == */
-                    
-//                 }
-//                 $lineChars = [];
-//                 $result = $this -> parseInline($lineChars);
-//                 $list[] = array('depth' => $count, 'item' => $result['parsed'], 'char' => $char);
-//             }
-//             // Move along to start of next line
-//             $lineStart += $lineLen + 1;
-//         }
-
-         /* Raw array of list items and their depth */
-
-//         $text = implode($textChars);
-//         $lines = explode("\n", $text);
-//         while (count($lines) > 0) {
-//             /* Loop through lines */
-//             $count = 0;
-//             $char = '';
-                
-//             $count = self::countCharString($lineBlockElement -> startChar, $lines[0], $lineBlockElement -> limit);
-//             if ($count == 0) {
-//                 /* This line is not part of the element, or is not valid */
-//                 break;
-//             } else {
-//                 $line = array_shift($lines);
-//                 $char = mb_substr($line, $count - 1, 1);
-
-//                 /* Slice off the lead-in characters and put through inline parser */
-//                 $line = mb_substr($line, $count, mb_strlen($line) - $count);
-//                 if (count($lineBlockElement -> endChar) > 0) {
-//                     /* Also need to cut off end letters, such as in == Heading == */
-//                     $line = rtrim($line);
-//                     $endcount = self::countCharString($lineBlockElement -> endChar, strrev($line), $lineBlockElement -> limit);
-//                     $line = mb_substr($line, 0, mb_strlen($line) - $endcount);
-//                 }
-//                 $result = $this -> parseInline(self::explodeString($line));
-//                 $list[] = array('depth' => $count, 'item' => $result['parsed'], 'char' => $char);
-//             }
-//         }
+        while (($lineLen = self::getLineLen($textChars, $lineStart)) !== false) {
+            $startTokenLen = self::countChar($lineBlockElement -> startChar, $textChars, $lineStart, $lineBlockElement -> limit);
+            if ($startTokenLen === 0) {
+                break;
+            } else {
+                $char = $textChars[$lineStart + $startTokenLen - 1];
+                $endTokenLen = 0;
+                if (count($lineBlockElement -> endChar) > 0) {
+                    /* Also need to cut off end letters, such as in == Heading == */
+                    $endTokenLen = self::countCharReverse($lineBlockElement -> endChar, $textChars, $lineStart + $startTokenLen, $lineStart + $lineLen - 1);
+                }
+                // Remainder of the line
+                $lineChars = array_slice($textChars, $lineStart + $startTokenLen, $lineLen - $startTokenLen - $endTokenLen);
+                $result = $this -> parseInline($lineChars);
+                $list[] = array('depth' => $startTokenLen, 'item' => $result['parsed'], 'char' => $char);
+            }
+            // Move along to start of next line
+            $lineStart += $lineLen + 1;
+        }
 
         if ($lineBlockElement -> nestTags) {
             /* Hierachy-ify nestable lists */
@@ -586,8 +556,8 @@ class WikitextParser
         $table['properties'] = implode($propertiesChars);
         $table['row'] = [];
         $lineStart = $lineLen + 1;
-        while(($lineLen = self::getLineLen($textChars, $lineStart)) !== false) {
-            if(self::tagIsAt(self::$tableStart -> endTag, $textChars, $lineStart)) {
+        while (($lineLen = self::getLineLen($textChars, $lineStart)) !== false) {
+            if (self::tagIsAt(self::$tableStart -> endTag, $textChars, $lineStart)) {
                 $lineStart += $lineLen + 1;
                 break;
             }
@@ -641,10 +611,11 @@ class WikitextParser
         return array('parsed' => $parsed, 'remainderChars' => $remainderChars);
     }
     
-    private static function getLineLen(array $textChars, int $position) {
+    private static function getLineLen(array $textChars, int $position)
+    {
         // Return number of characters in line, or FALSE if the string is depleted
-        for($i = $position; $i < count($textChars); $i++) {
-            if($textChars[$i] == "\n") {
+        for ($i = $position; $i < count($textChars); $i++) {
+            if ($textChars[$i] == "\n") {
                 return $i - $position;
             }
         }
@@ -754,46 +725,24 @@ class WikitextParser
         $remainderChars = array_slice($textChars, $start, $len - $start);
         return array('col' => $colsSoFar, 'remainderChars' => $remainderChars);
     }
-
-    /**
-     * Count the number of times a character occurs at the start of a string
-     *
-     * @param string $char character to check
-     * @param string $text String to search
-     * @return number The number of times this character repeats at the start of the string
-     */
-    private static function countCharString(array $chars, string $text, int $max = 0)
+    private static function countChar(array $chars, array $text, int $position, int $max = 0)
     {
-        for ($i = 0; $i < mb_strlen($text) && ($max == 0 || $i <= $max); $i++) {
-            $c = mb_substr($text, $i, 1);
-            /* See if this char is a valid start */
-            $match = false;
-            foreach ($chars as $char) {
-                $match = $match || ($char == $c);
-            }
-                
-            if (!$match) {
-                return $i;
-            }
-        }
-
-        if (!($max == 0 || $i <= $max)) {
-            /* max was reached */
-            return $max;
-        }
-
-        /* Otherwise looks like the entire string is just this character repeated.. */
-        return mb_strlen($text);
-    }
-    
-    private static function countChar(array $chars, array $text, int $position, int $max = 0) {
         $i = 0;
-        while($i < $max && array_search($text[$position + 1], $chars) !== false) {
+        while ($i < $max && array_search($text[$position + $i], $chars) !== false) {
             $i++;
         }
         return $i;
     }
 
+    private static function countCharReverse(array $chars, array $text, int $min, int $position)
+    {
+        $i = 0;
+        while (($position - $i) > $min && array_search($text[$position - $i], $chars) !== false) {
+            $i++;
+        }
+        return $i;
+    }
+    
     /**
      * Create a list from what we found in parseLineBlock(), returning all elements.
      */
