@@ -293,16 +293,21 @@ class WikitextParser
 
     private static function tagIsAt(array $tag, array $textChars, int $position)
     {
-        $tag_len = count($tag);
-        $str_len = count($textChars);
-        if ($tag_len == 0 || $position + $tag_len > $str_len || $textChars[$position] != $tag[0]) { //$textChars[$position] != $tag[0]) {
+        if ($textChars[$position] != $tag[0]) {
+            // Fast exit for common case
             return false;
         }
-        // TODO might work faster if we can ditch use of strings
-        $tag = implode($tag);
-        $len = mb_strlen($tag);
-        $text = implode(array_slice($textChars, $position, $len));
-        return $len !== 0 && $tag == $text;
+        // More detailed checks for other cases
+        $tagLen = count($tag);
+        $strLen = count($textChars);
+        $match = $position + $tagLen <= $strLen && $tagLen > 0;
+        for ($i = 1; $i < $tagLen && $match; $i++) {
+            if ($textChars[$position + $i] !== $tag[$i]) {
+                $match = false;
+                break;
+            }
+        }
+        return $match;
     }
 
     private static function tagIsAtString(string $tag, array $textChars, int $position)
@@ -517,6 +522,9 @@ class WikitextParser
         while (($lineLen = self::getLineLen($textChars, $lineStart)) !== false) {
             $startTokenLen = self::countChar($lineBlockElement -> startChar, $textChars, $lineStart, $lineBlockElement -> limit);
             if ($startTokenLen === 0) {
+                // Wind back to include "\n" if the next line is not a list item. This is not expected
+                // to trigger on the first iteration, since line-block tags were found for calling this method.
+                $lineStart -= 1;
                 break;
             } else {
                 $char = $textChars[$lineStart + $startTokenLen - 1];
