@@ -13,13 +13,13 @@ class ParserInlineElement
     public $argNameSep;
     public $hasArgs;
     
-    public function __construct($startTag, $endTag, $argSep = '', $argNameSep = '', $argLimit = 0)
+    public function __construct(string $startTag, string $endTag, string $argSep = '', string $argNameSep = '', int $argLimit = 0)
     {
-        $this -> startTag = $startTag;
-        $this -> endTag = $endTag;
-        $this -> argSep = $argSep;
-        $this -> argNameSep = $argNameSep;
+        $this -> startTag = str_split($startTag);
+        $this -> endTag = str_split($endTag);
+        $this -> argSep = str_split($argSep);
+        $this -> argNameSep = str_split($argNameSep);
         $this -> argLimit = $argLimit;
-        $this -> hasArgs = $this -> argSep != '';
+        $this -> hasArgs = count($this -> argSep) > 0;
     }
 }
