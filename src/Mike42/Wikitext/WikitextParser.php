@@ -184,7 +184,7 @@ class WikitextParser
             $hit = false;
             $c = $textChars[$i];
             if (!isset(self::$preprocessorChars[$c])) {
-                // Fast exit for characters that do not start a tag.
+                /* Fast exit for characters that do not start a tag. */
                 // TODO Could work faster if we didn't concatenate each character
                 $parsed .= $c;
                 continue;
@@ -204,7 +204,7 @@ class WikitextParser
                     /* Hit a symbol. Parse it and keep going after the result */
                     $hit = true;
                     $i += count($child -> startTag);
-                        
+
                     if (($key == 'includeonly' && $included) || ($key == 'noinclude' && !$included)) {
                         /* If this is a good tag, ignore it! */
                         break;
@@ -214,7 +214,7 @@ class WikitextParser
                     $innerArg   = [];
                     $innerBuffer = '';
                     $innerCurKey = '';
-                        
+
                     for ($i = $i; $i < $len; $i++) {
                         $innerHit = false;
 
@@ -309,7 +309,7 @@ class WikitextParser
         }
         return $match;
     }
-    
+
     /**
      * Parse a block of wikitext looking for inline tokens, indicating the start of an element.
      * Calls itself recursively to search inside those elements when it finds them
@@ -331,14 +331,14 @@ class WikitextParser
         } else {
             $inlineElement = self::$inline[$token];
         }
-        
+
         $parsed = ''; // For completely parsed text
         $buffer = ''; // For text which may still be encapsulated or chopped up
         $remainder = '';
-        
+
         $arg = [];
         $curKey = '';
-        
+
         $len = count($textChars);
         for ($i = $idxFrom; $i < $len; $i++) {
             /* Looping through each character */
@@ -350,8 +350,7 @@ class WikitextParser
                 $buffer .= $c;
                 continue;
             }
-            
-            
+
             /* Looking for this element's close-token */
             if (self::tagIsAt($inlineElement -> endTag, $textChars, $i)) {
                 /* Hit a close tag: Stop parsing here, return the remainder, and let the parent continue */
@@ -366,12 +365,12 @@ class WikitextParser
                     }
                     $buffer = self::$backend -> renderWithArgs($token, $arg);
                 }
-                
+
                 /* Clean up and quit */
                 $parsed .= $buffer; /* As far as I can tall $inPargraph should always be false here? */
                 return array('parsed' => $parsed, 'remainderIdx' => $start);
             }
-            
+
             /* Next priority is looking for this element's agument tokens if applicable */
             if ($inlineElement -> hasArgs && ($inlineElement -> argLimit == 0 || $inlineElement -> argLimit > count($arg))) {
                 if (self::tagIsAt($inlineElement -> argSep, $textChars, $i)) {
@@ -381,7 +380,7 @@ class WikitextParser
                     } else {
                         $arg[$curKey] = $buffer;
                     }
-                    
+
                     $curKey = ''; // Reset key
                     $buffer = ''; // Reset parsed values
                     /* Handle position properly */
@@ -502,14 +501,15 @@ class WikitextParser
         /* Block element we are using */
         $lineBlockElement = self::$lineBlock[$token];
         
-        // Attempted re-write
+        // Loop through lines
         $lineStart = $fromIdx;
         $list = [];
         while (($lineLen = self::getLineLen($textChars, $lineStart)) !== false) {
             $startTokenLen = self::countChar($lineBlockElement -> startChar, $textChars, $lineStart, $lineBlockElement -> limit);
             if ($startTokenLen === 0) {
-                // Wind back to include "\n" if the next line is not a list item. This is not expected
-                // to trigger on the first iteration, since line-block tags were found for calling this method.
+                /* Wind back to include "\n" if the next line is not a list item. This is not expected
+                 * to trigger on the first iteration, since line-block tags were found for calling this method.
+                 */
                 $lineStart -= 1;
                 break;
             } else {
@@ -519,12 +519,12 @@ class WikitextParser
                     /* Also need to cut off end letters, such as in == Heading == */
                     $endTokenLen = self::countCharReverse($lineBlockElement -> endChar, $textChars, $lineStart + $startTokenLen, $lineStart + $lineLen - 1);
                 }
-                // Remainder of the line
+                /* Remainder of the line */
                 $lineChars = array_slice($textChars, $lineStart + $startTokenLen, $lineLen - $startTokenLen - $endTokenLen);
                 $result = $this -> parseInline($lineChars);
                 $list[] = array('depth' => $startTokenLen, 'item' => $result['parsed'], 'char' => $char);
             }
-            // Move along to start of next line
+            /* Move along to start of next line */
             $lineStart += $lineLen + 1;
         }
 
@@ -567,7 +567,7 @@ class WikitextParser
                 $tokenLen = count($block -> lineStart);
                 $contentStart = $lineStart + $tokenLen;
                 $contentLen = $lineLen - $tokenLen;
-                
+
                 if ($token == 'td' || $token == 'th') {
                     if (!isset($tmpRow)) {
                         /* Been given a cell before a row. Make a row first */
@@ -591,7 +591,7 @@ class WikitextParser
                     );
                 }
             }
-            // Move along to start of next line
+            /* Move along to start of next line */
             $lineStart += $lineLen + 1;
         }
         if (isset($tmpRow)) {
@@ -601,10 +601,10 @@ class WikitextParser
         $parsed = self::$backend -> renderTable($table);
         return array('parsed' => $parsed, 'remainderIdx' => $lineStart);
     }
-    
+
     private static function getLineLen(array $textChars, int $position)
     {
-        // Return number of characters in line, or FALSE if the string is depleted
+        /* Return number of characters in line, or FALSE if the string is depleted */
         for ($i = $position; $i < count($textChars); $i++) {
             if ($textChars[$i] == "\n") {
                 return $i - $position;
@@ -660,16 +660,16 @@ class WikitextParser
                     }
                 }
             }
-                
+
             if ($hit) {
                 /* Parse whatever it is and return here */
                 $start = $i;
                 $result = $this -> parseInline($textChars, 'td', $start);
                 $buffer .= $result['parsed'];
-                // TODO was -1 before
+                // TODO was -1 before, seems to work well though
                 $i = $result['remainderIdx'];
             }
-                
+
             if (!$hit && self::tagIsAt($tableElement -> inlinesep, $textChars, $i)) {
                 /* Got column separator, so this column is now finished */
                 $tmpCol['content'] = $buffer;
@@ -682,7 +682,7 @@ class WikitextParser
                 $i += count($tableElement -> inlinesep) - 1;
                 $argCount = 0;
             }
-                
+
             if (!$hit && $argCount < ($tableElement -> limit) && self::tagIsAt($tableElement -> argsep, $textChars, $i)) {
                 /* Got argument separator. Shift off the last argument */
                 $tmpCol['arg'][] = $buffer;
@@ -691,7 +691,7 @@ class WikitextParser
                 $i += count($tableElement -> argsep) - 1;
                 $argCount++;
             }
-                
+
             if (!$hit) {
                 $c = $textChars[$i];
                 if ($c == "\n") {
@@ -730,7 +730,7 @@ class WikitextParser
         }
         return $i;
     }
-    
+
     /**
      * Create a list from what we found in parseLineBlock(), returning all elements.
      */
