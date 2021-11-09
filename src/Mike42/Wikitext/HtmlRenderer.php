@@ -108,7 +108,7 @@ abstract class HtmlRenderer
      * @param mixed $list The hierachy representing this list
      * @return string HTML markup for the list
      */
-    public function renderList($token, $list, $expectedDepth = 1)
+    public function renderList($token, $list, $expectedDepth = 1): string
     {
         $outp = '';
         $subtoken = "li";
@@ -147,7 +147,7 @@ abstract class HtmlRenderer
      * @param string $caption Caption of this link (can inlude parsed wikitext)
      * @return string HTML markup for the link
      */
-    public function renderLinkInternal($arg)
+    public function renderLinkInternal($arg): string
     {
         /* Figure out properties based on arguments */
         if (isset($arg[0])) {
@@ -217,6 +217,7 @@ abstract class HtmlRenderer
 
         /* Allow the local app to contribute to link properties */
         $info = $this->getInternalLinkInfo($info);
+
         return "<a href=\"" . htmlspecialchars($info['url']) . "\" title=\"" . htmlspecialchars($info['title']) . "\"" . (!$info['exists'] ? " class=\"new\"" : '') . ">" . $info['caption'] . "</a>";
     }
 
@@ -344,10 +345,7 @@ abstract class HtmlRenderer
     /**
      * Method to override when providing extra info about an image (basically external URL and thumbnail path)
      */
-    public function getImageInfo($info)
-    {
-        return $info;
-    }
+    abstract public function getImageInfo($info): array;
 
     /**
      * Method to override when providing extra info about a link

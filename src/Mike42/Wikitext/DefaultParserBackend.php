@@ -22,4 +22,9 @@ class DefaultParserBackend extends HtmlRenderer
         return $info;
     }
 
+    public function getImageInfo($info): array
+    {
+        return $info;
+    }
+
 }

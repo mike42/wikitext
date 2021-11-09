@@ -111,7 +111,7 @@ class WikitextParser
         $this->initialised = true;
     }
 
-    private function elementLookupTable(array $elements)
+    private function elementLookupTable(array $elements): array
     {
         $lookup = [];
         foreach ($elements as $key => $token) {
