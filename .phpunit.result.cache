@@ -1,0 +1,1 @@
+{"version":1,"defects":[],"times":{"Mike42\\Wikitext\\DefaultParserBackendTest::testGetTemplateMarkup":0.003,"Mike42\\Wikitext\\WikitextParserTest::testParse":0.001,"Mike42\\Wikitext\\WikitextParserTest::testLink":0}}

@@ -7,7 +7,7 @@ class WikitextParserTest extends \PHPUnit\Framework\TestCase
 
     protected $sut;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->sut = new WikitextParser();
     }
