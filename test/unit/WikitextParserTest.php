@@ -27,4 +27,9 @@ class WikitextParserTest extends \PHPUnit\Framework\TestCase
         $this->assertParsingEquals("<p>Link : <a href=\"yolo\" title=\"yolo\">yolo</a></p>\n", "Link : [[yolo]]");
     }
 
+    public function testTable()
+    {
+        $this->assertParsingEquals("<table>\n<tr>\n<td>aaa</td>\n</tr>\n</table>\n", "{|\n|aaa\n|}");
+    }
+
 }
