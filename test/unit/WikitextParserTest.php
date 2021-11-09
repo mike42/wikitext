@@ -32,4 +32,9 @@ class WikitextParserTest extends \PHPUnit\Framework\TestCase
         $this->assertParsingEquals("<table>\n<tr>\n<td>aaa</td>\n</tr>\n</table>\n", "{|\n|aaa\n|}");
     }
 
+    public function testImage()
+    {
+        $this->assertParsingEquals("<p><a href=\"hungary\"><img src=\"Flag of Hungary vertical.jpg\" alt=\"yolo\" /></a></p>\n", "[[File:Flag of Hungary vertical.jpg|bottom|8px|link=hungary|alt=yolo]]");
+    }
+
 }

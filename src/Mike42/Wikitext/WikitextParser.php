@@ -225,7 +225,7 @@ class WikitextParser
                                 }
                             } else if ($key == 'template') {
                                 /* Load wikitext of template, and preprocess it */
-                                if ($this->MAX_INCLUDE_DEPTH < 0 || $depth < $this->MAX_INCLUDE_DEPTH) {
+                                if (self::MAX_INCLUDE_DEPTH < 0 || $depth < self::MAX_INCLUDE_DEPTH) {
                                     $markup = trim($this->backend->getTemplateMarkup($innerCurKey));
                                     $parsed .= $this->preprocessText($this->explodeString($markup), $innerArg, true, $depth + 1);
                                 }
