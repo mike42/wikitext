@@ -9,7 +9,7 @@ class WikitextParserTest extends \PHPUnit\Framework\TestCase
 
     protected function setUp(): void
     {
-        $this->sut = new WikitextParser();
+        $this->sut = new WikitextParser(new DefaultParserBackend());
     }
 
     protected function assertParsingEquals(string $expected, string $wikitext): void

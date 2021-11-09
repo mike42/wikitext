@@ -47,7 +47,7 @@ class WikitextParser
     /**
      * Definitions for tokens with special meaning to the parser
      */
-    public function __construct(array $sharedVars = [])
+    public function __construct(HtmlRenderer $render)
     {
         /* Table elements. These are parsed separately to the other elements */
         $this->tableStart = new ParserInlineElement("{|", "|}");
@@ -85,7 +85,7 @@ class WikitextParser
         /* Create lookup table for efficiency */
 
         $this->inlineLookup = $this->elementLookupTable($this->inline);
-        $this->backend = new DefaultParserBackend();
+        $this->backend = $render;
 
         /* Line-block elements. These are characters which have a special meaning at the start of lines, and use the next end-line as a close tag. */
         $this->lineBlock = array(
