@@ -1,13 +1,16 @@
 <?php
+
 /**
  * Methods from this class are called as different types of markup are encountered,
  * and are expected to provide supporting functions like template substitutions,
  * link destinations, and other installation-specific oddities
  */
+
 namespace Mike42\Wikitext;
 
-class DefaultParserBackend
+class DefaultParserBackend extends HtmlRenderer
 {
+
     private $interwiki;
 
     /**
@@ -61,17 +64,17 @@ class DefaultParserBackend
 
     public function renderOl($token, $list)
     {
-        return $this -> renderList($token, $list);
+        return $this->renderList($token, $list);
     }
 
     public function renderUl($token, $list)
     {
-        return $this -> renderList($token, $list);
+        return $this->renderList($token, $list);
     }
 
     public function renderDl($token, $list)
     {
-        return $this -> renderList($token, $list);
+        return $this->renderList($token, $list);
     }
 
     public function renderH($token, $headings)
@@ -79,7 +82,7 @@ class DefaultParserBackend
         $outp = "";
         foreach ($headings as $heading) {
             $tag = "h" . $heading['depth'];
-            $outp .= "<$tag>".$heading['item']."</$tag>\n";
+            $outp .= "<$tag>" . $heading['item'] . "</$tag>\n";
         }
         return $outp;
     }
@@ -91,7 +94,7 @@ class DefaultParserBackend
             $outpline[] = $line['item'];
         }
 
-        return "<pre>".implode("\n", $outpline)."</pre>";
+        return "<pre>" . implode("\n", $outpline) . "</pre>";
     }
 
     /**
@@ -109,7 +112,7 @@ class DefaultParserBackend
 
         foreach ($list as $item) {
             if ($token == 'dl') {
-                $subtoken = $item['char'] == ";"? "dt": "dd";
+                $subtoken = $item['char'] == ";" ? "dt" : "dd";
             }
             $outp .= "<$subtoken>";
             $diff = $item['depth'] - $expectedDepth;
@@ -121,7 +124,7 @@ class DefaultParserBackend
             $outp .= $item['item'];
             if (count($item['child']) > 0) {
                 /* Add children if applicable */
-                $outp .= $this -> renderList($token, $item['child'], $item['depth'] + 1);
+                $outp .= $this->renderList($token, $item['child'], $item['depth'] + 1);
             }
             if ($diff > 0) {
                 /* Close above extra encapsulation if applicable */
@@ -162,14 +165,14 @@ class DefaultParserBackend
             }
         }
 
-        $info = array(  'url' => $destination, /* You should override getInternalLinkInfo() to set this better according to your application. */
-                'title' => $destination, /* Eg [[foo:bar]] links to "foo:bar". */
-                'namespace' => '', /* Eg [[foo:bar]] is in namespace 'foo' */
-                'target' => $destination, /* Eg [[foo:bar]] has the target "bar" within the namespace. */
-                'namespaceignore' => false, /* eg [[:File:foo.png]], link to the image don't include it */
-                'caption' => $caption, /* The link caption eg [[foo:bar|baz]] has the caption 'baz' */
-                'exists' => true, /* Causes class="new" for making red-links */
-                'external' => false);
+        $info = array('url' => $destination, /* You should override getInternalLinkInfo() to set this better according to your application. */
+            'title' => $destination, /* Eg [[foo:bar]] links to "foo:bar". */
+            'namespace' => '', /* Eg [[foo:bar]] is in namespace 'foo' */
+            'target' => $destination, /* Eg [[foo:bar]] has the target "bar" within the namespace. */
+            'namespaceignore' => false, /* eg [[:File:foo.png]], link to the image don't include it */
+            'caption' => $caption, /* The link caption eg [[foo:bar|baz]] has the caption 'baz' */
+            'exists' => true, /* Causes class="new" for making red-links */
+            'external' => false);
 
         /* Attempt to deduce namespaces */
         if ($destination == '') {
@@ -191,26 +194,26 @@ class DefaultParserBackend
             $info['target'] = substr($destination, $split, strlen($destination) - $split);
 
             /* Look up in default interwiki table */
-            if ($this -> interwiki == false) {
+            if ($this->interwiki == false) {
                 /* Load as needed */
-                $this -> loadInterwikiLinks();
+                $this->loadInterwikiLinks();
             }
 
             if ($info['namespace'] == 'file') {
                 /* Render an image instead of a link if requested */
                 $info['url'] = $info['target'];
                 $info['caption'] = '';
-                return $this -> renderFile($info, $arg);
-            } else if (isset($this -> interwiki[$info['namespace']])) {
+                return $this->renderFile($info, $arg);
+            } else if (isset($this->interwiki[$info['namespace']])) {
                 /* We have a known namespace */
-                $site = $this -> interwiki[$info['namespace']];
+                $site = $this->interwiki[$info['namespace']];
                 $info['url'] = str_replace("$1", $info['target'], $site);
             }
         }
 
         /* Allow the local app to contribute to link properties */
-        $info = $this -> getInternalLinkInfo($info);
-        return "<a href=\"".htmlspecialchars($info['url'])."\" title=\"".htmlspecialchars($info['title'])."\"".(!$info['exists']? " class=\"new\"": '').">".$info['caption']."</a>";
+        $info = $this->getInternalLinkInfo($info);
+        return "<a href=\"" . htmlspecialchars($info['url']) . "\" title=\"" . htmlspecialchars($info['title']) . "\"" . (!$info['exists'] ? " class=\"new\"" : '') . ">" . $info['caption'] . "</a>";
     }
 
     public function renderFile($info, $arg)
@@ -298,7 +301,7 @@ class DefaultParserBackend
                     }
                 }
 
-                $info = $this -> getImageInfo($info);
+                $info = $this->getImageInfo($info);
 
                 if ($info['namespaceignore'] || !$info['exists']) {
                     /* Only link to the image, do not display it */
@@ -306,7 +309,7 @@ class DefaultParserBackend
                         $info['caption'] = $info['target'];
                     }
                     /* Construct link */
-                    return "<a href=\"".htmlspecialchars($info['url'])."\" title=\"".htmlspecialchars($info['title'])."\"".(!$info['exists']? " class=\"new\"": '').">".$info['caption']."</a>";
+                    return "<a href=\"" . htmlspecialchars($info['url']) . "\" title=\"" . htmlspecialchars($info['title']) . "\"" . (!$info['exists'] ? " class=\"new\"" : '') . ">" . $info['caption'] . "</a>";
                 } else {
                     $dend = $dstart = "";
                     if (isset($info['thumbnail']) || isset($info['frame'])) {
@@ -319,14 +322,14 @@ class DefaultParserBackend
                         }
                         $dstart = "<div class=\"thumb$align\">";
                         if ($info['caption'] != '') {
-                            $dend .= "<div class=\"thumbcaption\">" . htmlspecialchars($info['caption']) .  "</div>";
+                            $dend .= "<div class=\"thumbcaption\">" . htmlspecialchars($info['caption']) . "</div>";
                         }
                         $dend .= "</div>";
                     }
                     /* Construct link */
-                    return "$dstart<a href=\"".htmlspecialchars($info['url'])."\"><img src=\"".htmlspecialchars($info['thumb'])."\" alt=\"".htmlspecialchars($info['title']). "\" /></a>$dend";
+                    return "$dstart<a href=\"" . htmlspecialchars($info['url']) . "\"><img src=\"" . htmlspecialchars($info['thumb']) . "\" alt=\"" . htmlspecialchars($info['title']) . "\" /></a>$dend";
                 }
-                    
+
                 break;
             default:
                 /* Something unsupported */
@@ -352,18 +355,18 @@ class DefaultParserBackend
 
     public function loadInterwikiLinks()
     {
-        if ($this -> interwiki != false) {
+        if ($this->interwiki != false) {
             /* Use loaded interwiki links if they exist */
             return;
         }
 
-        $this -> interwiki = array();
+        $this->interwiki = array();
         $json = file_get_contents(__DIR__ . "/interwiki.json");
         /* Unserialize data and load into associative array for easy lookup */
         $arr = json_decode($json);
-        foreach ($arr -> query -> interwikimap as $site) {
-            if (isset($site -> prefix) && isset($site -> url)) {
-                $this -> interwiki[$site -> prefix] = $site -> url;
+        foreach ($arr->query->interwikimap as $site) {
+            if (isset($site->prefix) && isset($site->url)) {
+                $this->interwiki[$site->prefix] = $site->url;
             }
         }
     }
@@ -381,7 +384,7 @@ class DefaultParserBackend
         if (isset($arg[1])) {
             $caption = $arg[1];
         }
-        return "<a href=\"".htmlspecialchars($destination)."\" class=\"external\">".$caption."</a>";
+        return "<a href=\"" . htmlspecialchars($destination) . "\" class=\"external\">" . $caption . "</a>";
     }
 
     /**
@@ -392,7 +395,7 @@ class DefaultParserBackend
      */
     public function encapsulateBold($text)
     {
-        return "<b>".$text."</b>";
+        return "<b>" . $text . "</b>";
     }
 
     /**
@@ -403,12 +406,12 @@ class DefaultParserBackend
      */
     public function encapsulateItalic($text)
     {
-        return "<i>".$text."</i>";
+        return "<i>" . $text . "</i>";
     }
 
     public function encapsulateParagraph($text)
     {
-        return "<p>".$text."</p>\n";
+        return "<p>" . $text . "</p>\n";
     }
 
     /**
@@ -419,14 +422,14 @@ class DefaultParserBackend
         if ($table['properties'] == '') {
             $outp = "<table>\n";
         } else {
-            $outp = "<table ".trim($table['properties']).">\n";
+            $outp = "<table " . trim($table['properties']) . ">\n";
         }
 
         foreach ($table['row'] as $row) {
-            $outp .= $this -> renderRow($row);
+            $outp .= $this->renderRow($row);
         }
 
-        return $outp."</table>\n";
+        return $outp . "</table>\n";
     }
 
     /**
@@ -438,17 +441,17 @@ class DefaultParserBackend
         if ($row['properties'] == '') {
             $outp = "<tr>\n";
         } else {
-            $outp = "<tr ".trim($row['properties']).">\n";
+            $outp = "<tr " . trim($row['properties']) . ">\n";
         }
 
         foreach ($row['col'] as $col) {
             /* Show column with or without attributes */
             if (count($col['arg']) != 0) {
-                $outp .= "<". $col['token']. " " . trim($col['arg'][0]) . ">";
+                $outp .= "<" . $col['token'] . " " . trim($col['arg'][0]) . ">";
             } else {
-                $outp .= "<". $col['token']. ">";
+                $outp .= "<" . $col['token'] . ">";
             }
-            $outp .= $col['content']."</". $col['token']. ">\n";
+            $outp .= $col['content'] . "</" . $col['token'] . ">\n";
         }
 
         return $outp . "</tr>\n";
@@ -463,4 +466,5 @@ class DefaultParserBackend
     {
         return "[[$template]]";
     }
+
 }
