@@ -7,9 +7,9 @@
 namespace Mike42\Wikitext;
 
 /**
- * InterwikiRepository implemented when the source is a file
+ * InterwikiRepository implemented when the source is a json file
  */
-class FileInterwikiRepository implements InterwikiRepository
+class JsonInterwikiRepository implements InterwikiRepository
 {
 
     protected $interwiki = [];
