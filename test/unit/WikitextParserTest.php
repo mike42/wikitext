@@ -34,4 +34,18 @@ class WikitextParserTest extends \PHPUnit\Framework\TestCase
         $this->assertParsingEquals($expected, $wikitext);
     }
 
+    public function namespaced(): array
+    {
+        return [
+            ["<p><a href=\"kitty:purr\" title=\"kitty:purr\">kitty:purr</a></p>\n", "[[kitty:purr]]"],
+            ["<p><a href=\"https://en.wikipedia.org/wiki/kitty\" title=\"en:kitty\">en:kitty</a></p>\n", "[[en:kitty]]"],
+        ];
+    }
+
+    /** @dataProvider namespaced */
+    public function testNamespacedLink($expected, $wikitext)
+    {
+        $this->assertParsingEquals($expected, $wikitext);
+    }
+
 }
