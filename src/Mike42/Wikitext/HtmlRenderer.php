@@ -17,6 +17,15 @@ abstract class HtmlRenderer
 
     private $interwiki;
 
+    public function __construct(?InterwikiRepository $repo = null)
+    {
+        if (is_null($repo)) {
+            $repo = new NullInterwikiRepository();
+        }
+
+        $this->interwiki = $repo;
+    }
+
     /**
      * Process an element which has arguments. Links, lists and templates fall under this category
      *
@@ -197,20 +206,14 @@ abstract class HtmlRenderer
             $split++;
             $info['target'] = substr($destination, $split, strlen($destination) - $split);
 
-            /* Look up in default interwiki table */
-            if ($this->interwiki == false) {
-                /* Load as needed */
-                $this->loadInterwikiLinks();
-            }
-
             if ($info['namespace'] == 'file') {
                 /* Render an image instead of a link if requested */
                 $info['url'] = $info['target'];
                 $info['caption'] = '';
                 return $this->renderFile($info, $arg);
-            } else if (isset($this->interwiki[$info['namespace']])) {
+            } else if ($this->interwiki->hasNamespace($info['namespace'])) {
                 /* We have a known namespace */
-                $site = $this->interwiki[$info['namespace']];
+                $site = $this->interwiki->getTargetUrl($info['namespace']);
                 $info['url'] = str_replace("$1", $info['target'], $site);
             }
         }
@@ -351,24 +354,6 @@ abstract class HtmlRenderer
      * Method to override when providing extra info about a link
      */
     abstract public function getInternalLinkInfo($info): array;
-
-    public function loadInterwikiLinks()
-    {
-        if ($this->interwiki != false) {
-            /* Use loaded interwiki links if they exist */
-            return;
-        }
-
-        $this->interwiki = array();
-        $json = file_get_contents(__DIR__ . "/interwiki.json");
-        /* Unserialize data and load into associative array for easy lookup */
-        $arr = json_decode($json);
-        foreach ($arr->query->interwikimap as $site) {
-            if (isset($site->prefix) && isset($site->url)) {
-                $this->interwiki[$site->prefix] = $site->url;
-            }
-        }
-    }
 
     /**
      * Default rendering of [http://... link] or [http://foo]
