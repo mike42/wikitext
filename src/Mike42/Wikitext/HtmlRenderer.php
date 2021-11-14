@@ -215,6 +215,7 @@ abstract class HtmlRenderer
                 /* We have a known namespace */
                 $site = $this->interwiki->getTargetUrl($info['namespace']);
                 $info['url'] = str_replace("$1", $info['target'], $site);
+                $info['external'] = true;
             }
         }
 
