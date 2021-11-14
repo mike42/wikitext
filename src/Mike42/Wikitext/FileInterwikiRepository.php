@@ -28,7 +28,7 @@ class FileInterwikiRepository implements InterwikiRepository
 
     public function getTargetUrl(string $namespace): string
     {
-        return $this->interwiki[$info['namespace']];
+        return $this->interwiki[$namespace];
     }
 
     public function hasNamespace(string $ns): bool

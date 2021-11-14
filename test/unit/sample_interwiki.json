@@ -1,0 +1,13 @@
+{
+    "batchcomplete": "",
+    "query": {
+        "interwikimap": [
+            {
+                "prefix": "en",
+                "local": "",
+                "language": "English",
+                "url": "https://en.wikipedia.org/wiki/$1"
+            }
+        ]
+    }
+}
