@@ -246,6 +246,7 @@ abstract class HtmlRenderer
             case 'jpeg':
             case 'png':
             case 'gif':
+            case 'webp':
                 /* Image flags parsed. From: http://www.mediawiki.org/wiki/Help:Images */
 
                 /* Named arguments */
