@@ -330,7 +330,7 @@ abstract class HtmlRenderer
                         } else {
                             $align = "";
                         }
-                        $dstart = "<div class=\"thumb$align\">";
+                        $dstart = "<div class=\"thumb$align {$info['class']}\">";
                         if ($info['caption'] != '') {
                             $dend .= "<div class=\"thumbcaption\">" . htmlspecialchars($info['caption']) . "</div>";
                         }
