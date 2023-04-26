@@ -48,4 +48,14 @@ class WikitextParserTest extends \PHPUnit\Framework\TestCase
         $this->assertParsingEquals($expected, $wikitext);
     }
 
+    public function testTemplate()
+    {
+        $this->assertParsingEquals("<p><a href=\"test\" title=\"test\">test</a></p>\n", '{{test}}');
+    }
+
+    public function testTemplateWithArg()
+    {
+        $this->assertParsingEquals("<p><a href=\"test\" title=\"test\">test</a></p>\n", '{{test|arg=arf}}');
+    }
+
 }

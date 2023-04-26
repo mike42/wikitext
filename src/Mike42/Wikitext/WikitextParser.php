@@ -278,10 +278,15 @@ class WikitextParser
 
     private function tagIsAt(array $tag, array $textChars, int $position)
     {
+        if ($position >= count($textChars)) {
+            // Fast exit for common case
+            return false;
+        }
         if ($textChars[$position] != $tag[0]) {
             // Fast exit for common case
             return false;
         }
+
         // More detailed checks for other cases
         $tagLen = count($tag);
         $strLen = count($textChars);
